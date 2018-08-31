@@ -665,7 +665,7 @@ class DataFrame(object):
         Returns:
             A new DataFrame with the applied addition.
         """
-        other = self._validate_single_op(other, axis)
+        other = self._validate_other(other, axis)
         new_manager = self._data_manager.add(other=other,
                                              axis=axis,
                                              level=level,
@@ -4722,7 +4722,7 @@ class DataFrame(object):
 
         return DataFrame(data_manager=self._data_manager.scalar_operations(axis, other, func))
 
-    def _validate_other_df(self, other, axis):
+    def _validate_other(self, other, axis):
         """Helper method to check validity of other in inter-df operations"""
         axis = pandas.DataFrame()._get_axis_number(axis)
 
