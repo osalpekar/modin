@@ -291,30 +291,13 @@ class PandasDataManager(object):
         if level is not None:
             raise NotImplementedError("Mutlilevel index not yet supported "
                                       "in Pandas on Ray")
-        # assert(isinstance(other, type(self)))
+
         if hasattr(other, "_data_manager"):
             return self.inter_manager_operations(other._data_manager, "outer",
                     lambda x, y: func(x, y, axis, level, *args))
-            # return self._inter_df_op_helper(
-            #     lambda x, y: func(x, y, axis, level, *args), other, "outer",
-            #     level)
         else:
             return self.scalar_operations(axis, other,
                     lambda df: func(df, other, axis, level, *args))
-            # return self._single_df_op_helper(
-            #     lambda df: func(df, other, axis, level, *args), other, axis,
-            #     level)
-
-    # def _inter_df_op_helper(self, func, other, how, level, inplace=False):
-    #     if level is not None:
-    #         raise NotImplementedError("Mutlilevel index not yet supported "
-    #                                   "in Pandas on Ray")
-    #     new_manager = self.inter_manager_operations(other._data_manager, how, func)
-
-    #     if not inplace:
-    #         return DataFrame(data_manager=new_manager)
-    #     else:
-    #         self._update_inplace(new_manager=new_manager)
 
     def add(self, **kwargs):
         # func = self._prepare_method(pandas.DataFrame.add, **kwargs)

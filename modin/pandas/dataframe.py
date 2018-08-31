@@ -668,7 +668,6 @@ class DataFrame(object):
         isScalar = self._validate_single_op(other, axis)
 
         if isinstance(other, DataFrame) or isScalar:
-            print(type(other))
             new_manager = self._data_manager.add(other=other,
                                              axis=axis,
                                              level=level,
@@ -4730,7 +4729,7 @@ class DataFrame(object):
     def _validate_single_op(self, other, axis):
         axis = pandas.DataFrame()._get_axis_number(axis)
 
-        if is_list_like(other):
+        if not isinstance(other, DataFrame) and is_list_like(other):
             if axis == 0:
                 if len(other) != len(self.index):
                     raise ValueError(
@@ -4738,6 +4737,7 @@ class DataFrame(object):
                         "given {1}".format(len(self.index), len(other)))
             else:
                 if len(other) != len(self.columns):
+                    print("gonna raise error")
                     raise ValueError(
                         "Unable to coerce to Series, length must be {0}: "
                         "given {1}".format(len(self.columns), len(other)))
