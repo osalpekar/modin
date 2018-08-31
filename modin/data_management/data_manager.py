@@ -286,7 +286,7 @@ class PandasDataManager(object):
 
         return cls(new_data, joined_index, new_columns)
 
-    def _operator_helper(self, func, other, axis, level, *args):
+    def _inter_df_op_handler(self, func, other, axis, level, *args):
         """Helper method for inter-DataFrame and scalar operations"""
         if level is not None:
             raise NotImplementedError("Mutlilevel index not yet supported "
@@ -305,7 +305,7 @@ class PandasDataManager(object):
         axis = kwargs.get("axis", 0)
         level = kwargs.get("level", None)
         fill_value = kwargs.get("fill_value", None)
-        return self._operator_helper(func, other, axis, level, fill_value)
+        return self._inter_df_op_handler(func, other, axis, level, fill_value)
 
     # END Inter-Data operations
 
