@@ -783,6 +783,9 @@ def test_inter_df_math(op, simple=False):
     ray_df = pd.DataFrame(frame_data)
     pandas_df = pandas.DataFrame(frame_data)
 
+    # print(ray_df)
+    print(getattr(ray_df, op)(ray_df))
+    print(getattr(pandas_df, op)(pandas_df))
     assert ray_df_equals_pandas(
         getattr(ray_df, op)(ray_df),
         getattr(pandas_df, op)(pandas_df))

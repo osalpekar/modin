@@ -285,6 +285,47 @@ class PandasDataManager(object):
         new_data = reindexed_self.inter_data_operation(1, lambda l, r: inter_data_op_builder(l, r, self_cols, other_cols, func), reindexed_other)
 
         return cls(new_data, joined_index, new_columns)
+
+    def _operator_helper(self, func, other, axis, level, isScalar, *args):
+        """Helper method for inter-DataFrame and scalar operations"""
+        if level is not None:
+            raise NotImplementedError("Mutlilevel index not yet supported "
+                                      "in Pandas on Ray")
+        # assert(isinstance(other, type(self)))
+        if hasattr(other, "_data_manager"):
+            return self.inter_manager_operations(other._data_manager, "outer",
+                    lambda x, y: func(x, y, axis, level, *args))
+            # return self._inter_df_op_helper(
+            #     lambda x, y: func(x, y, axis, level, *args), other, "outer",
+            #     level)
+        else:
+            return self.scalar_operations(axis, other,
+                    lambda df: func(df, other, axis, level, *args))
+            # return self._single_df_op_helper(
+            #     lambda df: func(df, other, axis, level, *args), other, axis,
+            #     level)
+
+    # def _inter_df_op_helper(self, func, other, how, level, inplace=False):
+    #     if level is not None:
+    #         raise NotImplementedError("Mutlilevel index not yet supported "
+    #                                   "in Pandas on Ray")
+    #     new_manager = self.inter_manager_operations(other._data_manager, how, func)
+
+    #     if not inplace:
+    #         return DataFrame(data_manager=new_manager)
+    #     else:
+    #         self._update_inplace(new_manager=new_manager)
+
+    def add(self, **kwargs):
+        # func = self._prepare_method(pandas.DataFrame.add, **kwargs)
+        func = pandas.DataFrame.add
+        other = kwargs.get("other") 
+        axis = kwargs.get("axis", 0)
+        level = kwargs.get("level", None)
+        fill_value = kwargs.get("fill_value", None)
+        isScalar = kwargs.get("isScalar", False)
+        return self._operator_helper(func, other, axis, level, isScalar, fill_value)
+
     # END Inter-Data operations
 
     # Single Manager scalar operations (e.g. add to scalar, list of scalars)

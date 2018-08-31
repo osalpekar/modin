@@ -665,8 +665,18 @@ class DataFrame(object):
         Returns:
             A new DataFrame with the applied addition.
         """
-        return self._operator_helper(pandas.DataFrame.add, other, axis, level,
-                                     fill_value)
+        isScalar = self._validate_single_op(other, axis)
+
+        if isinstance(other, DataFrame) or isScalar:
+            print(type(other))
+            new_manager = self._data_manager.add(other=other,
+                                             axis=axis,
+                                             level=level,
+                                             fill_value=fill_value,
+                                             isScalar=isScalar)
+        return self._create_dataframe_from_manager(new_manager)
+        # return self._operator_helper(pandas.DataFrame.add, other, axis, level,
+        #                              fill_value)
 
     def agg(self, func, axis=0, *args, **kwargs):
         return self.aggregate(func, axis, *args, **kwargs)
@@ -4680,6 +4690,12 @@ class DataFrame(object):
                 lambda df: func(df, other, axis, level, *args), other, axis,
                 level)
 
+    def _create_dataframe_from_manager(self, new_manager, inplace=False):
+        if not inplace:
+            return DataFrame(data_manager=new_manager)
+        else:
+            self._update_inplace(new_manager=new_manager)
+
     def _inter_df_op_helper(self, func, other, how, level, inplace=False):
         if level is not None:
             raise NotImplementedError("Mutlilevel index not yet supported "
@@ -4710,6 +4726,23 @@ class DataFrame(object):
                         "given {1}".format(len(self.columns), len(other)))
 
         return DataFrame(data_manager=self._data_manager.scalar_operations(axis, other, func))
+
+    def _validate_single_op(self, other, axis):
+        axis = pandas.DataFrame()._get_axis_number(axis)
+
+        if is_list_like(other):
+            if axis == 0:
+                if len(other) != len(self.index):
+                    raise ValueError(
+                        "Unable to coerce to Series, length must be {0}: "
+                        "given {1}".format(len(self.index), len(other)))
+            else:
+                if len(other) != len(self.columns):
+                    raise ValueError(
+                        "Unable to coerce to Series, length must be {0}: "
+                        "given {1}".format(len(self.columns), len(other)))
+        return True
+
 
 
 @ray.remote
