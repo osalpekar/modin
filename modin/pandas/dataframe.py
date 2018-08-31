@@ -4685,6 +4685,7 @@ class DataFrame(object):
                 level)
 
     def _create_dataframe_from_manager(self, new_manager, inplace=False):
+        """Returns or updates a DataFrame given new data_manager"""
         if not inplace:
             return DataFrame(data_manager=new_manager)
         else:
@@ -4722,6 +4723,7 @@ class DataFrame(object):
         return DataFrame(data_manager=self._data_manager.scalar_operations(axis, other, func))
 
     def _validate_single_op(self, other, axis):
+        """Helper method to check validity of other in inter-df operations"""
         axis = pandas.DataFrame()._get_axis_number(axis)
 
         if isinstance(other, DataFrame):
@@ -4734,7 +4736,6 @@ class DataFrame(object):
                         "given {1}".format(len(self.index), len(other)))
             else:
                 if len(other) != len(self.columns):
-                    print("gonna raise error")
                     raise ValueError(
                         "Unable to coerce to Series, length must be {0}: "
                         "given {1}".format(len(self.columns), len(other)))
