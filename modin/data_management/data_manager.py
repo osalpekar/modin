@@ -302,6 +302,58 @@ class PandasDataManager(object):
         func = pandas.DataFrame.add
         return self._inter_df_op_handler(func, other, **kwargs)
 
+    def div(self, other, **kwargs):
+        func = pandas.DataFrame.div
+        return self._inter_df_op_handler(func, other, **kwargs)
+
+    def eq(self, other, **kwargs):
+        func = pandas.DataFrame.eq
+        return self._inter_df_op_handler(func, other, **kwargs)
+
+    def floordiv(self, other, **kwargs):
+        func = pandas.DataFrame.floordiv
+        return self._inter_df_op_handler(func, other, **kwargs)
+
+    def ge(self, other, **kwargs):
+        func = pandas.DataFrame.ge
+        return self._inter_df_op_handler(func, other, **kwargs)
+
+    def gt(self, other, **kwargs):
+        func = pandas.DataFrame.gt
+        return self._inter_df_op_handler(func, other, **kwargs)
+
+    def le(self, other, **kwargs):
+        func = pandas.DataFrame.le
+        return self._inter_df_op_handler(func, other, **kwargs)
+
+    def lt(self, other, **kwargs):
+        func = pandas.DataFrame.lt
+        return self._inter_df_op_handler(func, other, **kwargs)
+
+    def mod(self, other, **kwargs):
+        func = pandas.DataFrame.mod
+        return self._inter_df_op_handler(func, other, **kwargs)
+
+    def mul(self, other, **kwargs):
+        func = pandas.DataFrame.mul
+        return self._inter_df_op_handler(func, other, **kwargs)
+
+    def ne(self, other, **kwargs):
+        func = pandas.DataFrame.ne
+        return self._inter_df_op_handler(func, other, **kwargs)
+
+    def pow(self, other, **kwargs):
+        func = pandas.DataFrame.pow
+        return self._inter_df_op_handler(func, other, **kwargs)
+
+    def sub(self, other, **kwargs):
+        func = pandas.DataFrame.sub
+        return self._inter_df_op_handler(func, other, **kwargs)
+
+    def truediv(self, other, **kwargs):
+        func = pandas.DataFrame.truediv
+        return self._inter_df_op_handler(func, other, **kwargs)
+
     # END Inter-Data operations
 
     # Single Manager scalar operations (e.g. add to scalar, list of scalars)

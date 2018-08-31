@@ -1200,8 +1200,18 @@ class DataFrame(object):
         Returns:
             A new DataFrame with the Divide applied.
         """
-        return self._operator_helper(pandas.DataFrame.div, other, axis, level,
-                                     fill_value)
+        if level is not None:
+            raise NotImplementedError("Mutlilevel index not yet supported "
+                                      "in Pandas on Ray")
+
+        other = self._validate_other(other, axis)
+        new_manager = self._data_manager.div(other=other,
+                                             axis=axis,
+                                             level=level,
+                                             fill_value=fill_value)
+        return self._create_dataframe_from_manager(new_manager)
+        # return self._operator_helper(pandas.DataFrame.div, other, axis, level,
+        #                              fill_value)
 
     def divide(self, other, axis='columns', level=None, fill_value=None):
         """Synonym for div.
@@ -1321,7 +1331,16 @@ class DataFrame(object):
         Returns:
             A new DataFrame filled with Booleans.
         """
-        return self._operator_helper(pandas.DataFrame.eq, other, axis, level)
+        if level is not None:
+            raise NotImplementedError("Mutlilevel index not yet supported "
+                                      "in Pandas on Ray")
+
+        other = self._validate_other(other, axis)
+        new_manager = self._data_manager.eq(other=other,
+                                             axis=axis,
+                                             level=level)
+        return self._create_dataframe_from_manager(new_manager)
+        # return self._operator_helper(pandas.DataFrame.eq, other, axis, level)
 
     def equals(self, other):
         """
@@ -1570,8 +1589,18 @@ class DataFrame(object):
         Returns:
             A new DataFrame with the Divide applied.
         """
-        return self._operator_helper(pandas.DataFrame.floordiv, other, axis,
-                                     level, fill_value)
+        if level is not None:
+            raise NotImplementedError("Mutlilevel index not yet supported "
+                                      "in Pandas on Ray")
+
+        other = self._validate_other(other, axis)
+        new_manager = self._data_manager.floordiv(other=other,
+                                             axis=axis,
+                                             level=level,
+                                             fill_value=fill_value)
+        return self._create_dataframe_from_manager(new_manager)
+        # return self._operator_helper(pandas.DataFrame.floordiv, other, axis,
+        #                              level, fill_value)
 
     @classmethod
     def from_csv(self,
@@ -1622,7 +1651,16 @@ class DataFrame(object):
         Returns:
             A new DataFrame filled with Booleans.
         """
-        return self._operator_helper(pandas.DataFrame.ge, other, axis, level)
+        if level is not None:
+            raise NotImplementedError("Mutlilevel index not yet supported "
+                                      "in Pandas on Ray")
+
+        other = self._validate_other(other, axis)
+        new_manager = self._data_manager.ge(other=other,
+                                             axis=axis,
+                                             level=level)
+        return self._create_dataframe_from_manager(new_manager)
+        # return self._operator_helper(pandas.DataFrame.ge, other, axis, level)
 
     def get(self, key, default=None):
         """Get item from object for given key (DataFrame column, Panel
@@ -1682,7 +1720,16 @@ class DataFrame(object):
         Returns:
             A new DataFrame filled with Booleans.
         """
-        return self._operator_helper(pandas.DataFrame.gt, other, axis, level)
+        if level is not None:
+            raise NotImplementedError("Mutlilevel index not yet supported "
+                                      "in Pandas on Ray")
+
+        other = self._validate_other(other, axis)
+        new_manager = self._data_manager.gt(other=other,
+                                             axis=axis,
+                                             level=level)
+        return self._create_dataframe_from_manager(new_manager)
+        # return self._operator_helper(pandas.DataFrame.gt, other, axis, level)
 
     def head(self, n=5):
         """Get the first n rows of the DataFrame.
@@ -2064,7 +2111,16 @@ class DataFrame(object):
         Returns:
             A new DataFrame filled with Booleans.
         """
-        return self._operator_helper(pandas.DataFrame.le, other, axis, level)
+        if level is not None:
+            raise NotImplementedError("Mutlilevel index not yet supported "
+                                      "in Pandas on Ray")
+
+        other = self._validate_other(other, axis)
+        new_manager = self._data_manager.le(other=other,
+                                             axis=axis,
+                                             level=level)
+        return self._create_dataframe_from_manager(new_manager)
+        # return self._operator_helper(pandas.DataFrame.le, other, axis, level)
 
     def lookup(self, row_labels, col_labels):
         raise NotImplementedError(
@@ -2082,7 +2138,16 @@ class DataFrame(object):
         Returns:
             A new DataFrame filled with Booleans.
         """
-        return self._operator_helper(pandas.DataFrame.lt, other, axis, level)
+        if level is not None:
+            raise NotImplementedError("Mutlilevel index not yet supported "
+                                      "in Pandas on Ray")
+
+        other = self._validate_other(other, axis)
+        new_manager = self._data_manager.lt(other=other,
+                                             axis=axis,
+                                             level=level)
+        return self._create_dataframe_from_manager(new_manager)
+        # return self._operator_helper(pandas.DataFrame.lt, other, axis, level)
 
     def mad(self, axis=None, skipna=None, level=None):
         raise NotImplementedError(
@@ -2390,8 +2455,18 @@ class DataFrame(object):
         Returns:
             A new DataFrame with the Mod applied.
         """
-        return self._operator_helper(pandas.DataFrame.mod, other, axis, level,
-                                     fill_value)
+        if level is not None:
+            raise NotImplementedError("Mutlilevel index not yet supported "
+                                      "in Pandas on Ray")
+
+        other = self._validate_other(other, axis)
+        new_manager = self._data_manager.mod(other=other,
+                                             axis=axis,
+                                             level=level,
+                                             fill_value=fill_value)
+        return self._create_dataframe_from_manager(new_manager)
+        # return self._operator_helper(pandas.DataFrame.mod, other, axis, level,
+        #                              fill_value)
 
     def mode(self, axis=0, numeric_only=False):
         """Perform mode across the DataFrame.
@@ -2419,8 +2494,18 @@ class DataFrame(object):
         Returns:
             A new DataFrame with the Multiply applied.
         """
-        return self._operator_helper(pandas.DataFrame.mul, other, axis, level,
-                                     fill_value)
+        if level is not None:
+            raise NotImplementedError("Mutlilevel index not yet supported "
+                                      "in Pandas on Ray")
+
+        other = self._validate_other(other, axis)
+        new_manager = self._data_manager.mul(other=other,
+                                             axis=axis,
+                                             level=level,
+                                             fill_value=fill_value)
+        return self._create_dataframe_from_manager(new_manager)
+        # return self._operator_helper(pandas.DataFrame.mul, other, axis, level,
+        #                              fill_value)
 
     def multiply(self, other, axis='columns', level=None, fill_value=None):
         """Synonym for mul.
@@ -2447,7 +2532,16 @@ class DataFrame(object):
         Returns:
             A new DataFrame filled with Booleans.
         """
-        return self._operator_helper(pandas.DataFrame.ne, other, axis, level)
+        if level is not None:
+            raise NotImplementedError("Mutlilevel index not yet supported "
+                                      "in Pandas on Ray")
+
+        other = self._validate_other(other, axis)
+        new_manager = self._data_manager.ne(other=other,
+                                             axis=axis,
+                                             level=level)
+        return self._create_dataframe_from_manager(new_manager)
+        # return self._operator_helper(pandas.DataFrame.ne, other, axis, level)
 
     def nlargest(self, n, columns, keep='first'):
         raise NotImplementedError(
@@ -2592,8 +2686,18 @@ class DataFrame(object):
         Returns:
             A new DataFrame with the Pow applied.
         """
-        return self._operator_helper(pandas.DataFrame.pow, other, axis, level,
-                                     fill_value)
+        if level is not None:
+            raise NotImplementedError("Mutlilevel index not yet supported "
+                                      "in Pandas on Ray")
+
+        other = self._validate_other(other, axis)
+        new_manager = self._data_manager.pow(other=other,
+                                             axis=axis,
+                                             level=level,
+                                             fill_value=fill_value)
+        return self._create_dataframe_from_manager(new_manager)
+        # return self._operator_helper(pandas.DataFrame.pow, other, axis, level,
+        #                              fill_value)
 
     def prod(self,
              axis=None,
@@ -3604,8 +3708,18 @@ class DataFrame(object):
         Returns:
              A new DataFrame with the subtraciont applied.
         """
-        return self._operator_helper(pandas.DataFrame.sub, other, axis, level,
-                                     fill_value)
+        if level is not None:
+            raise NotImplementedError("Mutlilevel index not yet supported "
+                                      "in Pandas on Ray")
+
+        other = self._validate_other(other, axis)
+        new_manager = self._data_manager.sub(other=other,
+                                             axis=axis,
+                                             level=level,
+                                             fill_value=fill_value)
+        return self._create_dataframe_from_manager(new_manager)
+        # return self._operator_helper(pandas.DataFrame.sub, other, axis, level,
+        #                              fill_value)
 
     def subtract(self, other, axis='columns', level=None, fill_value=None):
         """Alias for sub.
@@ -4030,8 +4144,18 @@ class DataFrame(object):
         Returns:
             A new DataFrame with the Divide applied.
         """
-        return self._operator_helper(pandas.DataFrame.truediv, other, axis,
-                                     level, fill_value)
+        if level is not None:
+            raise NotImplementedError("Mutlilevel index not yet supported "
+                                      "in Pandas on Ray")
+
+        other = self._validate_other(other, axis)
+        new_manager = self._data_manager.truediv(other=other,
+                                             axis=axis,
+                                             level=level,
+                                             fill_value=fill_value)
+        return self._create_dataframe_from_manager(new_manager)
+        # return self._operator_helper(pandas.DataFrame.truediv, other, axis,
+        #                              level, fill_value)
 
     def truncate(self, before=None, after=None, axis=None, copy=True):
         raise NotImplementedError(
