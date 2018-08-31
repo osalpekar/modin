@@ -286,7 +286,7 @@ class PandasDataManager(object):
 
         return cls(new_data, joined_index, new_columns)
 
-    def _operator_helper(self, func, other, axis, level, isScalar, *args):
+    def _operator_helper(self, func, other, axis, level, *args):
         """Helper method for inter-DataFrame and scalar operations"""
         if level is not None:
             raise NotImplementedError("Mutlilevel index not yet supported "
@@ -294,20 +294,18 @@ class PandasDataManager(object):
 
         if hasattr(other, "_data_manager"):
             return self.inter_manager_operations(other._data_manager, "outer",
-                    lambda x, y: func(x, y, axis, level, *args))
+                lambda x, y: func(x, y, axis, level, *args))
         else:
             return self.scalar_operations(axis, other,
-                    lambda df: func(df, other, axis, level, *args))
+                lambda df: func(df, other, axis, level, *args))
 
     def add(self, **kwargs):
-        # func = self._prepare_method(pandas.DataFrame.add, **kwargs)
         func = pandas.DataFrame.add
-        other = kwargs.get("other") 
+        other = kwargs.get("other")
         axis = kwargs.get("axis", 0)
         level = kwargs.get("level", None)
         fill_value = kwargs.get("fill_value", None)
-        isScalar = kwargs.get("isScalar", False)
-        return self._operator_helper(func, other, axis, level, isScalar, fill_value)
+        return self._operator_helper(func, other, axis, level, fill_value)
 
     # END Inter-Data operations
 

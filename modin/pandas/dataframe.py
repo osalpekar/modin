@@ -665,17 +665,12 @@ class DataFrame(object):
         Returns:
             A new DataFrame with the applied addition.
         """
-        isScalar = self._validate_single_op(other, axis)
-
-        if isinstance(other, DataFrame) or isScalar:
+        if self._validate_single_op(other, axis):
             new_manager = self._data_manager.add(other=other,
-                                             axis=axis,
-                                             level=level,
-                                             fill_value=fill_value,
-                                             isScalar=isScalar)
-        return self._create_dataframe_from_manager(new_manager)
-        # return self._operator_helper(pandas.DataFrame.add, other, axis, level,
-        #                              fill_value)
+                                                 axis=axis,
+                                                 level=level,
+                                                 fill_value=fill_value)
+            return self._create_dataframe_from_manager(new_manager)
 
     def agg(self, func, axis=0, *args, **kwargs):
         return self.aggregate(func, axis, *args, **kwargs)
@@ -4729,7 +4724,9 @@ class DataFrame(object):
     def _validate_single_op(self, other, axis):
         axis = pandas.DataFrame()._get_axis_number(axis)
 
-        if not isinstance(other, DataFrame) and is_list_like(other):
+        if isinstance(other, DataFrame):
+            return True
+        elif is_list_like(other):
             if axis == 0:
                 if len(other) != len(self.index):
                     raise ValueError(
