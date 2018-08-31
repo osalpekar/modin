@@ -292,8 +292,8 @@ class PandasDataManager(object):
             raise NotImplementedError("Mutlilevel index not yet supported "
                                       "in Pandas on Ray")
 
-        if hasattr(other, "_data_manager"):
-            return self.inter_manager_operations(other._data_manager, "outer",
+        if isinstance(other, type(self)):
+            return self.inter_manager_operations(other, "outer",
                 lambda x, y: func(x, y, axis, level, *args))
         else:
             return self.scalar_operations(axis, other,

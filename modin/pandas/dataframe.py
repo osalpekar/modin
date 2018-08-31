@@ -666,6 +666,8 @@ class DataFrame(object):
             A new DataFrame with the applied addition.
         """
         if self._validate_single_op(other, axis):
+            if isinstance(other, DataFrame):
+                other = other._data_manager
             new_manager = self._data_manager.add(other=other,
                                                  axis=axis,
                                                  level=level,
