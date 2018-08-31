@@ -4801,16 +4801,16 @@ class DataFrame(object):
 
         return zip(new_partitions_self, new_partitions_other)
 
-    def _operator_helper(self, func, other, axis, level, *args):
-        """Helper method for inter-DataFrame and scalar operations"""
-        if isinstance(other, DataFrame):
-            return self._inter_df_op_helper(
-                lambda x, y: func(x, y, axis, level, *args), other, "outer",
-                level)
-        else:
-            return self._single_df_op_helper(
-                lambda df: func(df, other, axis, level, *args), other, axis,
-                level)
+    # def _operator_helper(self, func, other, axis, level, *args):
+    #     """Helper method for inter-DataFrame and scalar operations"""
+    #     if isinstance(other, DataFrame):
+    #         return self._inter_df_op_helper(
+    #             lambda x, y: func(x, y, axis, level, *args), other, "outer",
+    #             level)
+    #     else:
+    #         return self._single_df_op_helper(
+    #             lambda df: func(df, other, axis, level, *args), other, axis,
+    #             level)
 
     def _create_dataframe_from_manager(self, new_manager, inplace=False):
         """Returns or updates a DataFrame given new data_manager"""
@@ -4819,36 +4819,36 @@ class DataFrame(object):
         else:
             self._update_inplace(new_manager=new_manager)
 
-    def _inter_df_op_helper(self, func, other, how, level, inplace=False):
-        if level is not None:
-            raise NotImplementedError("Mutlilevel index not yet supported "
-                                      "in Pandas on Ray")
-        new_manager = self._data_manager.inter_manager_operations(other._data_manager, how, func)
+    # def _inter_df_op_helper(self, func, other, how, level, inplace=False):
+    #     if level is not None:
+    #         raise NotImplementedError("Mutlilevel index not yet supported "
+    #                                   "in Pandas on Ray")
+    #     new_manager = self._data_manager.inter_manager_operations(other._data_manager, how, func)
 
-        if not inplace:
-            return DataFrame(data_manager=new_manager)
-        else:
-            self._update_inplace(new_manager=new_manager)
+    #     if not inplace:
+    #         return DataFrame(data_manager=new_manager)
+    #     else:
+    #         self._update_inplace(new_manager=new_manager)
 
-    def _single_df_op_helper(self, func, other, axis, level):
-        if level is not None:
-            raise NotImplementedError("Multilevel index not yet supported "
-                                      "in Pandas on Ray")
-        axis = pandas.DataFrame()._get_axis_number(axis)
+    # def _single_df_op_helper(self, func, other, axis, level):
+    #     if level is not None:
+    #         raise NotImplementedError("Multilevel index not yet supported "
+    #                                   "in Pandas on Ray")
+    #     axis = pandas.DataFrame()._get_axis_number(axis)
 
-        if is_list_like(other):
-            if axis == 0:
-                if len(other) != len(self.index):
-                    raise ValueError(
-                        "Unable to coerce to Series, length must be {0}: "
-                        "given {1}".format(len(self.index), len(other)))
-            else:
-                if len(other) != len(self.columns):
-                    raise ValueError(
-                        "Unable to coerce to Series, length must be {0}: "
-                        "given {1}".format(len(self.columns), len(other)))
+    #     if is_list_like(other):
+    #         if axis == 0:
+    #             if len(other) != len(self.index):
+    #                 raise ValueError(
+    #                     "Unable to coerce to Series, length must be {0}: "
+    #                     "given {1}".format(len(self.index), len(other)))
+    #         else:
+    #             if len(other) != len(self.columns):
+    #                 raise ValueError(
+    #                     "Unable to coerce to Series, length must be {0}: "
+    #                     "given {1}".format(len(self.columns), len(other)))
 
-        return DataFrame(data_manager=self._data_manager.scalar_operations(axis, other, func))
+    #     return DataFrame(data_manager=self._data_manager.scalar_operations(axis, other, func))
 
     def _validate_other(self, other, axis):
         """Helper method to check validity of other in inter-df operations"""
