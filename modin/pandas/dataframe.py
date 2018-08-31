@@ -1210,8 +1210,6 @@ class DataFrame(object):
                                              level=level,
                                              fill_value=fill_value)
         return self._create_dataframe_from_manager(new_manager)
-        # return self._operator_helper(pandas.DataFrame.div, other, axis, level,
-        #                              fill_value)
 
     def divide(self, other, axis='columns', level=None, fill_value=None):
         """Synonym for div.
@@ -1340,7 +1338,6 @@ class DataFrame(object):
                                              axis=axis,
                                              level=level)
         return self._create_dataframe_from_manager(new_manager)
-        # return self._operator_helper(pandas.DataFrame.eq, other, axis, level)
 
     def equals(self, other):
         """
@@ -1599,8 +1596,6 @@ class DataFrame(object):
                                              level=level,
                                              fill_value=fill_value)
         return self._create_dataframe_from_manager(new_manager)
-        # return self._operator_helper(pandas.DataFrame.floordiv, other, axis,
-        #                              level, fill_value)
 
     @classmethod
     def from_csv(self,
@@ -1660,7 +1655,6 @@ class DataFrame(object):
                                              axis=axis,
                                              level=level)
         return self._create_dataframe_from_manager(new_manager)
-        # return self._operator_helper(pandas.DataFrame.ge, other, axis, level)
 
     def get(self, key, default=None):
         """Get item from object for given key (DataFrame column, Panel
@@ -1729,7 +1723,6 @@ class DataFrame(object):
                                              axis=axis,
                                              level=level)
         return self._create_dataframe_from_manager(new_manager)
-        # return self._operator_helper(pandas.DataFrame.gt, other, axis, level)
 
     def head(self, n=5):
         """Get the first n rows of the DataFrame.
@@ -2120,7 +2113,6 @@ class DataFrame(object):
                                              axis=axis,
                                              level=level)
         return self._create_dataframe_from_manager(new_manager)
-        # return self._operator_helper(pandas.DataFrame.le, other, axis, level)
 
     def lookup(self, row_labels, col_labels):
         raise NotImplementedError(
@@ -2147,7 +2139,6 @@ class DataFrame(object):
                                              axis=axis,
                                              level=level)
         return self._create_dataframe_from_manager(new_manager)
-        # return self._operator_helper(pandas.DataFrame.lt, other, axis, level)
 
     def mad(self, axis=None, skipna=None, level=None):
         raise NotImplementedError(
@@ -2465,8 +2456,6 @@ class DataFrame(object):
                                              level=level,
                                              fill_value=fill_value)
         return self._create_dataframe_from_manager(new_manager)
-        # return self._operator_helper(pandas.DataFrame.mod, other, axis, level,
-        #                              fill_value)
 
     def mode(self, axis=0, numeric_only=False):
         """Perform mode across the DataFrame.
@@ -2504,8 +2493,6 @@ class DataFrame(object):
                                              level=level,
                                              fill_value=fill_value)
         return self._create_dataframe_from_manager(new_manager)
-        # return self._operator_helper(pandas.DataFrame.mul, other, axis, level,
-        #                              fill_value)
 
     def multiply(self, other, axis='columns', level=None, fill_value=None):
         """Synonym for mul.
@@ -2541,7 +2528,6 @@ class DataFrame(object):
                                              axis=axis,
                                              level=level)
         return self._create_dataframe_from_manager(new_manager)
-        # return self._operator_helper(pandas.DataFrame.ne, other, axis, level)
 
     def nlargest(self, n, columns, keep='first'):
         raise NotImplementedError(
@@ -2696,8 +2682,6 @@ class DataFrame(object):
                                              level=level,
                                              fill_value=fill_value)
         return self._create_dataframe_from_manager(new_manager)
-        # return self._operator_helper(pandas.DataFrame.pow, other, axis, level,
-        #                              fill_value)
 
     def prod(self,
              axis=None,
@@ -3718,8 +3702,6 @@ class DataFrame(object):
                                              level=level,
                                              fill_value=fill_value)
         return self._create_dataframe_from_manager(new_manager)
-        # return self._operator_helper(pandas.DataFrame.sub, other, axis, level,
-        #                              fill_value)
 
     def subtract(self, other, axis='columns', level=None, fill_value=None):
         """Alias for sub.
@@ -4154,8 +4136,6 @@ class DataFrame(object):
                                              level=level,
                                              fill_value=fill_value)
         return self._create_dataframe_from_manager(new_manager)
-        # return self._operator_helper(pandas.DataFrame.truediv, other, axis,
-        #                              level, fill_value)
 
     def truncate(self, before=None, after=None, axis=None, copy=True):
         raise NotImplementedError(
@@ -4801,54 +4781,12 @@ class DataFrame(object):
 
         return zip(new_partitions_self, new_partitions_other)
 
-    # def _operator_helper(self, func, other, axis, level, *args):
-    #     """Helper method for inter-DataFrame and scalar operations"""
-    #     if isinstance(other, DataFrame):
-    #         return self._inter_df_op_helper(
-    #             lambda x, y: func(x, y, axis, level, *args), other, "outer",
-    #             level)
-    #     else:
-    #         return self._single_df_op_helper(
-    #             lambda df: func(df, other, axis, level, *args), other, axis,
-    #             level)
-
     def _create_dataframe_from_manager(self, new_manager, inplace=False):
         """Returns or updates a DataFrame given new data_manager"""
         if not inplace:
             return DataFrame(data_manager=new_manager)
         else:
             self._update_inplace(new_manager=new_manager)
-
-    # def _inter_df_op_helper(self, func, other, how, level, inplace=False):
-    #     if level is not None:
-    #         raise NotImplementedError("Mutlilevel index not yet supported "
-    #                                   "in Pandas on Ray")
-    #     new_manager = self._data_manager.inter_manager_operations(other._data_manager, how, func)
-
-    #     if not inplace:
-    #         return DataFrame(data_manager=new_manager)
-    #     else:
-    #         self._update_inplace(new_manager=new_manager)
-
-    # def _single_df_op_helper(self, func, other, axis, level):
-    #     if level is not None:
-    #         raise NotImplementedError("Multilevel index not yet supported "
-    #                                   "in Pandas on Ray")
-    #     axis = pandas.DataFrame()._get_axis_number(axis)
-
-    #     if is_list_like(other):
-    #         if axis == 0:
-    #             if len(other) != len(self.index):
-    #                 raise ValueError(
-    #                     "Unable to coerce to Series, length must be {0}: "
-    #                     "given {1}".format(len(self.index), len(other)))
-    #         else:
-    #             if len(other) != len(self.columns):
-    #                 raise ValueError(
-    #                     "Unable to coerce to Series, length must be {0}: "
-    #                     "given {1}".format(len(self.columns), len(other)))
-
-    #     return DataFrame(data_manager=self._data_manager.scalar_operations(axis, other, func))
 
     def _validate_other(self, other, axis):
         """Helper method to check validity of other in inter-df operations"""
