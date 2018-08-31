@@ -665,14 +665,12 @@ class DataFrame(object):
         Returns:
             A new DataFrame with the applied addition.
         """
-        if self._validate_single_op(other, axis):
-            if isinstance(other, DataFrame):
-                other = other._data_manager
-            new_manager = self._data_manager.add(other=other,
-                                                 axis=axis,
-                                                 level=level,
-                                                 fill_value=fill_value)
-            return self._create_dataframe_from_manager(new_manager)
+        other = self._validate_single_op(other, axis)
+        new_manager = self._data_manager.add(other=other,
+                                             axis=axis,
+                                             level=level,
+                                             fill_value=fill_value)
+        return self._create_dataframe_from_manager(new_manager)
 
     def agg(self, func, axis=0, *args, **kwargs):
         return self.aggregate(func, axis, *args, **kwargs)
@@ -4724,12 +4722,12 @@ class DataFrame(object):
 
         return DataFrame(data_manager=self._data_manager.scalar_operations(axis, other, func))
 
-    def _validate_single_op(self, other, axis):
+    def _validate_other_df(self, other, axis):
         """Helper method to check validity of other in inter-df operations"""
         axis = pandas.DataFrame()._get_axis_number(axis)
 
         if isinstance(other, DataFrame):
-            return True
+            return other._data_manager
         elif is_list_like(other):
             if axis == 0:
                 if len(other) != len(self.index):
@@ -4741,7 +4739,7 @@ class DataFrame(object):
                     raise ValueError(
                         "Unable to coerce to Series, length must be {0}: "
                         "given {1}".format(len(self.columns), len(other)))
-        return True
+        return other
 
 
 
