@@ -665,6 +665,10 @@ class DataFrame(object):
         Returns:
             A new DataFrame with the applied addition.
         """
+        if level is not None:
+            raise NotImplementedError("Mutlilevel index not yet supported "
+                                      "in Pandas on Ray")
+
         other = self._validate_other(other, axis)
         new_manager = self._data_manager.add(other=other,
                                              axis=axis,

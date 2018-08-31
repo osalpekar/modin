@@ -286,26 +286,21 @@ class PandasDataManager(object):
 
         return cls(new_data, joined_index, new_columns)
 
-    def _inter_df_op_handler(self, func, other, axis, level, *args):
+    def _inter_df_op_handler(self, func, other, **kwargs):
         """Helper method for inter-DataFrame and scalar operations"""
-        if level is not None:
-            raise NotImplementedError("Mutlilevel index not yet supported "
-                                      "in Pandas on Ray")
+        axis = kwargs.get("axis", 0)
 
         if isinstance(other, type(self)):
             return self.inter_manager_operations(other, "outer",
-                lambda x, y: func(x, y, axis, level, *args))
+                lambda x, y: func(x, y, **kwargs))
         else:
             return self.scalar_operations(axis, other,
-                lambda df: func(df, other, axis, level, *args))
+                lambda df: func(df, other, **kwargs))
 
-    def add(self, **kwargs):
+    def add(self, other, **kwargs):
+        #TODO: need to write a prepare_function for inter_df operations
         func = pandas.DataFrame.add
-        other = kwargs.get("other")
-        axis = kwargs.get("axis", 0)
-        level = kwargs.get("level", None)
-        fill_value = kwargs.get("fill_value", None)
-        return self._inter_df_op_handler(func, other, axis, level, fill_value)
+        return self._inter_df_op_handler(func, other, **kwargs)
 
     # END Inter-Data operations
 
