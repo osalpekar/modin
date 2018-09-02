@@ -359,7 +359,9 @@ class PandasDataManager(object):
     # Single Manager scalar operations (e.g. add to scalar, list of scalars)
     def scalar_operations(self, axis, scalar, func):
         if isinstance(scalar, list):
-            return self.map_across_full_axis(axis, func)
+            cls = type(self)
+            new_data = self.map_across_full_axis(axis, func)
+            return cls(new_data, self.index, self.columns)
         else:
             return self.map_partitions(func)
     # END Single Manager scalar operations
