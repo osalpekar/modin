@@ -64,8 +64,12 @@ def concat(objs,
         raise ValueError("Only can inner (intersect) or outer (union) join the"
                          " other axis")
 
-    objs = [DataFrame(obj) if not isinstance(obj, DataFrame) else
-            obj for obj in objs]
+    # We have the weird Series and axis check because, when concatenating a
+    # dataframe to a series on axis=0, pandas ignores the name of the series,
+    # and this check aims to mirror that (possibly buggy) functionality
+    objs = [obj if isinstance(obj, DataFrame) else DataFrame(obj.rename()) if
+            isinstance(obj, pandas.Series) and axis == 0 else DataFrame(obj)
+            for obj in objs]
     df = objs[0]
     objs = [obj._data_manager for obj in objs]
     new_manager = df._data_manager.concat(axis, objs[1:], join=join,

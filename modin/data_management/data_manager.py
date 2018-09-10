@@ -235,7 +235,7 @@ class PandasDataManager(object):
         # suffixes.
         self_proxy_columns = pandas.DataFrame(columns=self.columns).columns
         other_proxy_columns = pandas.DataFrame(columns=other.columns).columns
-        new_columns = np.append(self_proxy_columns, other_proxy_columns)
+        new_columns = self_proxy_columns.append(others_proxy_columns)
 
         return cls(new_data, joined_index, new_columns)
 
@@ -267,8 +267,7 @@ class PandasDataManager(object):
         # suffixes.
         self_proxy_columns = pandas.DataFrame(columns=self.columns).columns
         others_proxy_columns = [pandas.DataFrame(columns=other.columns).columns for other in others]
-        new_columns = np.append(self_proxy_columns.values, [other.values for
-            other in others_proxy_columns])
+        new_columns = self_proxy_columns.append(others_proxy_columns)
 
         return cls(new_data, joined_index, new_columns)
     # END Append/Concat/Join
