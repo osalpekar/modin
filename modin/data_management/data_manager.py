@@ -172,20 +172,6 @@ class PandasDataManager(object):
     def concat(self, axis, other, **kwargs):
         return self._append_list_of_managers(other, axis, **kwargs)
 
-    def _append_data_manager(self, other, ignore_index, join):
-        assert isinstance(other, type(self)), \
-            "This method is for data manager objects only"
-        cls = type(self)
-
-        joined_columns = self._join_index_objects(0, other.columns, join)
-        to_append = other.reindex(1, joined_columns).data
-        new_self = self.reindex(1, joined_columns).data
-
-        new_data = new_self.concat(0, to_append)
-        new_index = self.index.append(other.index) if not ignore_index else pandas.RangeIndex(len(self.index) + len(other.index))
-
-        return cls(new_data, new_index, joined_columns)
-
     def _append_list_of_managers(self, others, axis, **kwargs):
         assert isinstance(others, list), \
             "This method is for lists of DataManager objects only"
