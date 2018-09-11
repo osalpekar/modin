@@ -170,18 +170,7 @@ class PandasDataManager(object):
             return self.index.join(other_index, how=how, sort=sort)
 
     def concat(self, axis, other, **kwargs):
-        ignore_index = kwargs.get("ignore_index", False)
-        join = kwargs.get("join", "outer")
-        if axis == 0:
-            if isinstance(other, list):
-                return self._append_list_of_managers(other, ignore_index, join)
-            else:
-                return self._append_data_manager(other, ignore_index, join)
-        else:
-            if isinstance(other, list):
-                return self._join_list_of_managers(other, **kwargs)
-            else:
-                return self._join_data_manager(other, **kwargs)
+        return self._append_list_of_managers(other, axis, **kwargs)
 
     def _append_data_manager(self, other, ignore_index, join):
         assert isinstance(other, type(self)), \
@@ -197,23 +186,35 @@ class PandasDataManager(object):
 
         return cls(new_data, new_index, joined_columns)
 
-    def _append_list_of_managers(self, others, ignore_index, join):
+    def _append_list_of_managers(self, others, axis, **kwargs):
         assert isinstance(others, list), \
             "This method is for lists of DataManager objects only"
         assert all(isinstance(other, type(self)) for other in others), \
             "Different Manager objects are being used. This is not allowed"
         cls = type(self)
 
-        joined_columns = self._join_index_objects(0, [other.columns for other
-            in others], join)
+        sort = kwargs.get("sort", None)
+        join = kwargs.get("join", "outer")
+        ignore_index = kwargs.get("ignore_index", False)
 
-        to_append = [other.reindex(1, joined_columns).data for other in others]
-        new_self = self.reindex(1, joined_columns).data
+        joined_axis = self._join_index_objects(axis, [other.columns if axis == 0
+            else other.index for other in others], join, sort=sort)
 
-        new_data = new_self.concat(0, to_append)
-        new_index = self.index.append([other.index for other in others]) if not ignore_index else pandas.RangeIndex(len(self.index) + sum([len(other.index) for other in others]))
+        to_append = [other.reindex(axis ^ 1, joined_axis).data for other in others]
+        new_self = self.reindex(axis ^ 1, joined_axis).data
+        new_data = new_self.concat(axis, to_append)
 
-        return cls(new_data, new_index, joined_columns)
+        if axis == 0:
+            new_index = self.index.append([other.index for other in others]) if not ignore_index else pandas.RangeIndex(len(self.index) + sum([len(other.index) for other in others]))
+
+            return cls(new_data, new_index, joined_axis)
+        else:
+            self_proxy_columns = pandas.DataFrame(columns=self.columns).columns
+            others_proxy_columns = [pandas.DataFrame(columns=other.columns).columns for other in others]
+            new_columns = self_proxy_columns.append(others_proxy_columns)
+
+            return cls(new_data, joined_axis, new_columns)
+
 
     def _join_data_manager(self, other, **kwargs):
         assert isinstance(other, type(self)), \
@@ -223,6 +224,8 @@ class PandasDataManager(object):
         # Uses join's default value (though should not revert to default)
         how = kwargs.get("how", "left")
         sort = kwargs.get("sort", False)
+        lsuffix = kwargs.get("lsuffix", "")
+        rsuffix = kwargs.get("rsuffix", "")
 
         joined_index = self._join_index_objects(1, other.index, how, sort=sort)
 
@@ -233,9 +236,9 @@ class PandasDataManager(object):
 
         # This stage is to efficiently get the resulting columns, including the
         # suffixes.
-        self_proxy_columns = pandas.DataFrame(columns=self.columns).columns
-        other_proxy_columns = pandas.DataFrame(columns=other.columns).columns
-        new_columns = self_proxy_columns.append(others_proxy_columns)
+        self_proxy = pandas.DataFrame(columns=self.columns)
+        other_proxy = pandas.DataFrame(columns=other.columns)
+        new_columns = self_proxy.join(other_proxy, lsuffix=lsuffix, rsuffix=rsuffix).columns
 
         return cls(new_data, joined_index, new_columns)
 
@@ -249,12 +252,8 @@ class PandasDataManager(object):
         # Uses join's default value (though should not revert to default)
         how = kwargs.get("how", "left")
         sort = kwargs.get("sort", False)
-
-        assert isinstance(others, list), \
-            "This method is for lists of DataManager objects only"
-        assert all(isinstance(other, type(self)) for other in others), \
-            "Different Manager objects are being used. This is not allowed"
-        cls = type(self)
+        lsuffix = kwargs.get("lsuffix", "")
+        rsuffix = kwargs.get("rsuffix", "")
 
         joined_index = self._join_index_objects(1, [other.index for other in others], how, sort=sort)
 
@@ -265,9 +264,10 @@ class PandasDataManager(object):
 
         # This stage is to efficiently get the resulting columns, including the
         # suffixes.
-        self_proxy_columns = pandas.DataFrame(columns=self.columns).columns
-        others_proxy_columns = [pandas.DataFrame(columns=other.columns).columns for other in others]
-        new_columns = self_proxy_columns.append(others_proxy_columns)
+        self_proxy = pandas.DataFrame(columns=self.columns)
+        others_proxy = [pandas.DataFrame(columns=other.columns) for other in
+                others]
+        new_columns = self_proxy.join(others_proxy, lsuffix=lsuffix, rsuffix=rsuffix).columns
 
         return cls(new_data, joined_index, new_columns)
     # END Append/Concat/Join
