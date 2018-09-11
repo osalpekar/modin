@@ -265,8 +265,7 @@ class PandasDataManager(object):
         # This stage is to efficiently get the resulting columns, including the
         # suffixes.
         self_proxy = pandas.DataFrame(columns=self.columns)
-        others_proxy = [pandas.DataFrame(columns=other.columns) for other in
-                others]
+        others_proxy = [pandas.DataFrame(columns=other.columns) for other in others]
         new_columns = self_proxy.join(others_proxy, lsuffix=lsuffix, rsuffix=rsuffix).columns
 
         return cls(new_data, joined_index, new_columns)
