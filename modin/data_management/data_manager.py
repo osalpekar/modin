@@ -169,6 +169,12 @@ class PandasDataManager(object):
         else:
             return self.index.join(other_index, how=how, sort=sort)
 
+    def join(self, axis, other, **kwargs):
+        if isinstance(other, list):
+            return self._join_list_of_managers(other, **kwargs)
+        else:
+            return self._join_data_manager(other, **kwargs)
+
     def concat(self, axis, other, **kwargs):
         return self._append_list_of_managers(other, axis, **kwargs)
 
