@@ -169,7 +169,7 @@ class PandasDataManager(object):
         else:
             return self.index.join(other_index, how=how, sort=sort)
 
-    def join(self, axis, other, **kwargs):
+    def join(self, other, **kwargs):
         if isinstance(other, list):
             return self._join_list_of_managers(other, **kwargs)
         else:

@@ -2011,7 +2011,7 @@ class DataFrame(object):
             # would otherwise require a lot more logic.
             pandas.DataFrame(columns=self.columns).join(pandas.DataFrame(columns=other.columns), lsuffix=lsuffix, rsuffix=rsuffix).columns
 
-            return DataFrame(data_manager=self._data_manager.join(1, other._data_manager, how=how, lsuffix=lsuffix, rsuffix=rsuffix, sort=sort))
+            return DataFrame(data_manager=self._data_manager.join(other._data_manager, how=how, lsuffix=lsuffix, rsuffix=rsuffix, sort=sort))
         else:
             # This constraint carried over from Pandas.
             if on is not None:
@@ -2024,7 +2024,7 @@ class DataFrame(object):
                 lsuffix=lsuffix,
                 rsuffix=rsuffix).columns
 
-            return DataFrame(data_manager=self._data_manager.join(1, [obj._data_manager for obj in other], how=how, lsuffix=lsuffix, rsuffix=rsuffix, sort=sort))
+            return DataFrame(data_manager=self._data_manager.join([obj._data_manager for obj in other], how=how, lsuffix=lsuffix, rsuffix=rsuffix, sort=sort))
 
     def kurt(self,
              axis=None,
