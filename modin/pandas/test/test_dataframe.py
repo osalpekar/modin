@@ -3570,3 +3570,15 @@ def test_get_dummies():
     pd_df = pandas.DataFrame(frame_data)
     assert ray_df_equals_pandas(
         pd.get_dummies(ray_df), pandas.get_dummies(pd_df))
+
+    frame_data = {'A': ['a'], 'B': ['b']}
+    ray_df = pd.DataFrame(frame_data)
+    pd_df = pandas.DataFrame(frame_data)
+    assert ray_df_equals_pandas(
+        pd.get_dummies(ray_df), pandas.get_dummies(pd_df))
+
+    frame_data = {'A': [1, 2, 3], 'B': [4, 5, 6], 'C': [1, 2, 3]}
+    ray_df = pd.DataFrame(frame_data)
+    pd_df = pandas.DataFrame(frame_data)
+    assert ray_df_equals_pandas(
+        pd.get_dummies(ray_df), pandas.get_dummies(pd_df))

@@ -5,7 +5,6 @@ from __future__ import print_function
 import numpy as np
 import pandas
 
-from itertools import cycle
 from pandas.compat import string_types
 from pandas.core.dtypes.cast import find_common_type
 from pandas.core.dtypes.common import (_get_dtype_from_object, is_list_like, is_numeric_dtype)
@@ -1475,6 +1474,20 @@ class PandasDataManager(object):
         func = self._prepare_method(repartition_func, **kwargs)
         return self.data.manual_shuffle(axis, func)
 
+    def groupby_agg(self, by, axis, agg_func, groupby_args={}, agg_args={}):
+        remote_index = self.index if not axis else self.columns
+
+        def groupby_agg_builder(df):
+            if not axis:
+                df.index = remote_index
+            else:
+                df.columns = remote_index
+            return agg_func(df.groupby(by=by, axis=axis, **groupby_args), **agg_args)
+        func_prepared = self._prepare_method(lambda df: groupby_agg_builder(df))
+        result_data = self.map_across_full_axis(axis, func_prepared)
+        return self._post_process_apply(result_data, axis, try_scale=False)
+    # END Manual Partitioning methods
+
     def get_dummies(self, columns, **kwargs):
         cls = type(self)
 
@@ -1511,7 +1524,11 @@ class PandasDataManager(object):
         # than it would be to reuse the code for specific columns.
         if len(columns) == len(self.columns):
             def get_dummies_builder(df):
-                return pandas.get_dummies(df, **kwargs)
+                if df is not None:
+                    if not df.empty:
+                        return pandas.get_dummies(df, **kwargs)
+                    else:
+                        return pandas.DataFrame([])
 
             func = self._prepare_method(lambda df: get_dummies_builder(df))
             new_data = columns_applied.map_across_full_axis(0, func)
@@ -1537,17 +1554,3 @@ class PandasDataManager(object):
             final_columns = untouched_data.columns.append(pandas.Index(final_columns))
 
         return cls(new_data, self.index, final_columns)
-
-    def groupby_agg(self, by, axis, agg_func, groupby_args={}, agg_args={}):
-        remote_index = self.index if not axis else self.columns
-
-        def groupby_agg_builder(df):
-            if not axis:
-                df.index = remote_index
-            else:
-                df.columns = remote_index
-            return agg_func(df.groupby(by=by, axis=axis, **groupby_args), **agg_args)
-        func_prepared = self._prepare_method(lambda df: groupby_agg_builder(df))
-        result_data = self.map_across_full_axis(axis, func_prepared)
-        return self._post_process_apply(result_data, axis, try_scale=False)
-    # END Manual Partitioning methods
