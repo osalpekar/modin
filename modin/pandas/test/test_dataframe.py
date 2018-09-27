@@ -23,6 +23,7 @@ else:
     PY2 = False
 
 
+# The test data that we will test our code against
 test_data = {
     "empty_data": {},
     "int_data": {
@@ -75,6 +76,18 @@ test_dfs = {name: [pd.DataFrame(data), pandas.DataFrame(data)] for name, data in
 test_dfs_keys = list(test_dfs.keys())
 test_dfs_values = list(test_dfs.values())
 
+# Test functionss for applymap
+test_funcs = {
+        "plus one": lambda x: x + 1, 
+        "convert to string": lambda x: str(x), 
+        "square": lambda x: x * x, 
+        "identity": lambda x: x, 
+        "return false": lambda x: False 
+        }
+test_func_keys = list(test_dfs.keys())
+test_func_values = list(test_dfs.values())
+
+
 def ray_df_equals_pandas(ray_df, pandas_df):
     return to_pandas(ray_df).equals(pandas_df)
 
@@ -90,18 +103,6 @@ def ray_df_equals(ray_df1, ray_df2):
 def ray_df_is_empty(df):
     assert df.size == 0 and df.empty
     assert df.shape[0] == 0 or df.shape[1] == 0
-
-
-@pytest.fixture
-def test_agg_funcs():
-    agg_funcs = dict()
-
-    agg_funcs["sum"] = "sum"
-    agg_funcs["df sum"] = lambda df: df.sum()
-    agg_funcs["sum mean"] = ["sum", "mean"]
-    agg_funcs["sum sum"] = ["sum", "sum"]
-
-    return agg_funcs
 
 
 def test_empty_df():
@@ -1000,7 +1001,8 @@ def test_add_suffix(ray_df, pandas_df):
     assert new_ray_df.columns.equals(new_pandas_df.columns)
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
+@pytest.mark.parametrize("testfunc", test_func_values, ids=test_func_keys)
 def test_applymap(ray_df, pandas_df, testfunc):
     new_ray_df = ray_df.applymap(testfunc)
     new_pandas_df = pandas_df.applymap(testfunc)
