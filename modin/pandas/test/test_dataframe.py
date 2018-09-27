@@ -23,6 +23,58 @@ else:
     PY2 = False
 
 
+test_data = {
+    "empty_data": {},
+    "int_data": {
+        "col1": [0, 1, 2, 3], 
+        "col2": [4, 5, 6, 7], 
+        "col3": [8, 9, 10, 11], 
+        "col4": [12, 13, 14, 15], 
+        "col5": [0, 0, 0, 0]
+        },
+    "float_data": { 
+        "col1": [0.0, 1.0, 2.0, 3.0], 
+        "col2": [4.0, 5.0, 6.0, 7.0], 
+        "col3": [8.0, 9.0, 10.0, 11.0], 
+        "col4": [12.0, 13.0, 14.0, 15.0], 
+        "col5": [0.0, 0.0, 0.0, 0.0]
+        },
+    "sparse_nan_data": {
+        "col1": [1, 2, 3, np.nan],
+        "col2": [4, 5, np.nan, 7],
+        "col3": [8, np.nan, 10, 11],
+        "col4": [np.nan, 13, 14, 15],
+    },
+    "dense_nan_data": {
+        "col1": [np.nan, 2, np.nan, 0],
+        "col2": [3, 4, np.nan, 1],
+        "col3": [np.nan, np.nan, np.nan, 5],
+        },
+    "int_float_object_data": { 
+        "col1": [1, 2, 3, 4], 
+        "col2": [4, 5, 6, "7"], 
+        "col3": [8.0, 9.4, 10.1, 11.3], 
+        "col4": ["a", "b", "c", "d"]
+        },
+    "datetime_timedelta_data": {
+            'col1': [np.datetime64('2010'), np.datetime64('2011'), np.datetime64('2011-06-15T00:00'), np.datetime64('2009-01-01')],
+            'col2': [np.datetime64('2010'), np.datetime64('2011'), np.datetime64('2011-06-15T00:00'), np.datetime64('2009-01-01')],
+            'col3': [np.timedelta64(1, 'M'), np.timedelta64(2, 'D'), np.timedelta64(3, 'Y'), np.timedelta64(20, 'D')],
+            'col4': [np.timedelta64(1, 'M'), np.timedelta64(2, 'D'), np.timedelta64(3, 'Y'), np.timedelta64(20, 'D')],
+            },
+    "all_data": { 
+            'col1' : 1.,
+            'col2' : np.datetime64('2011-06-15T00:00'),
+            'col3' : np.array([3] * 4,dtype='int32'),
+            'col4' : 'foo',
+            'col5' : True
+            }
+    }
+
+test_dfs = {name: [pd.DataFrame(data), pandas.DataFrame(data)] for name, data in test_data.items()}
+test_dfs_keys = list(test_dfs.keys())
+test_dfs_values = list(test_dfs.values())
+
 def ray_df_equals_pandas(ray_df, pandas_df):
     return to_pandas(ray_df).equals(pandas_df)
 
@@ -32,8 +84,56 @@ def ray_series_equals_pandas(ray_series, pandas_series):
 
 
 def ray_df_equals(ray_df1, ray_df2):
-    # return ray_df1.equals(ray_df2)
     return to_pandas(ray_df1).equals(to_pandas(ray_df2))
+
+
+def ray_df_is_empty(df):
+    assert df.size == 0 and df.empty
+    assert df.shape[0] == 0 or df.shape[1] == 0
+
+
+@pytest.fixture
+def test_agg_funcs():
+    agg_funcs = dict()
+
+    agg_funcs["sum"] = "sum"
+    agg_funcs["df sum"] = lambda df: df.sum()
+    agg_funcs["sum mean"] = ["sum", "mean"]
+    agg_funcs["sum sum"] = ["sum", "sum"]
+
+    return agg_funcs
+
+
+def test_empty_df():
+    df = pd.DataFrame(index=["a", "b"])
+    test_is_empty(df)
+    tm.assert_index_equal(df.index, pd.Index(["a", "b"]))
+    assert len(df.columns) == 0
+
+    df = pd.DataFrame(columns=["a", "b"])
+    test_is_empty(df)
+    assert len(df.index) == 0
+    tm.assert_index_equal(df.columns, pd.Index(["a", "b"]))
+
+    df = pd.DataFrame()
+    test_is_empty(df)
+    assert len(df.index) == 0
+    assert len(df.columns) == 0
+
+    df = pd.DataFrame(index=["a", "b"])
+    test_is_empty(df)
+    tm.assert_index_equal(df.index, pd.Index(["a", "b"]))
+    assert len(df.columns) == 0
+
+    df = pd.DataFrame(columns=["a", "b"])
+    test_is_empty(df)
+    assert len(df.index) == 0
+    tm.assert_index_equal(df.columns, pd.Index(["a", "b"]))
+
+    df = pd.DataFrame()
+    test_is_empty(df)
+    assert len(df.index) == 0
+    assert len(df.columns) == 0
 
 
 @pytest.fixture
@@ -731,44 +831,6 @@ def test_nan_dataframe():
     test_transform(ray_df, pandas_df)
 
 
-def test_empty_df():
-    df = pd.DataFrame(index=["a", "b"])
-    test_is_empty(df)
-    tm.assert_index_equal(df.index, pd.Index(["a", "b"]))
-    assert len(df.columns) == 0
-
-    df = pd.DataFrame(columns=["a", "b"])
-    test_is_empty(df)
-    assert len(df.index) == 0
-    tm.assert_index_equal(df.columns, pd.Index(["a", "b"]))
-
-    df = pd.DataFrame()
-    test_is_empty(df)
-    assert len(df.index) == 0
-    assert len(df.columns) == 0
-
-    df = pd.DataFrame(index=["a", "b"])
-    test_is_empty(df)
-    tm.assert_index_equal(df.index, pd.Index(["a", "b"]))
-    assert len(df.columns) == 0
-
-    df = pd.DataFrame(columns=["a", "b"])
-    test_is_empty(df)
-    assert len(df.index) == 0
-    tm.assert_index_equal(df.columns, pd.Index(["a", "b"]))
-
-    df = pd.DataFrame()
-    test_is_empty(df)
-    assert len(df.index) == 0
-    assert len(df.columns) == 0
-
-
-@pytest.fixture
-def test_is_empty(df):
-    assert df.size == 0 and df.empty
-    assert df.shape[0] == 0 or df.shape[1] == 0
-
-
 def test_dense_nan_df():
     frame_data = [
         [np.nan, 2, np.nan, 0],
@@ -874,7 +936,7 @@ def test_inter_df_math_right_ops(op):
     assert ray_df_equals_pandas(getattr(ray_df, op)(4.0), getattr(pandas_df, op)(4.0))
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_index(ray_df, pandas_df):
     assert ray_df.index.equals(pandas_df.index)
     ray_df_cp = ray_df.copy()
@@ -885,43 +947,43 @@ def test_index(ray_df, pandas_df):
     assert ray_df_cp.index.equals(pandas_df_cp.index)
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_size(ray_df, pandas_df):
     assert ray_df.size == pandas_df.size
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_ndim(ray_df, pandas_df):
     assert ray_df.ndim == pandas_df.ndim
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_ftypes(ray_df, pandas_df):
     assert ray_df.ftypes.equals(pandas_df.ftypes)
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_dtypes(ray_df, pandas_df):
     assert ray_df.dtypes.equals(pandas_df.dtypes)
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_values(ray_df, pandas_df):
     np.testing.assert_equal(ray_df.values, pandas_df.values)
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_axes(ray_df, pandas_df):
     for ray_axis, pd_axis in zip(ray_df.axes, pandas_df.axes):
         assert np.array_equal(ray_axis, pd_axis)
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_shape(ray_df, pandas_df):
     assert ray_df.shape == pandas_df.shape
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_add_prefix(ray_df, pandas_df):
     test_prefix = "TEST"
     new_ray_df = ray_df.add_prefix(test_prefix)
@@ -929,7 +991,7 @@ def test_add_prefix(ray_df, pandas_df):
     assert new_ray_df.columns.equals(new_pandas_df.columns)
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_add_suffix(ray_df, pandas_df):
     test_suffix = "TEST"
     new_ray_df = ray_df.add_suffix(test_suffix)
@@ -946,8 +1008,10 @@ def test_applymap(ray_df, pandas_df, testfunc):
     assert ray_df_equals_pandas(new_ray_df, new_pandas_df)
 
 
-@pytest.fixture
-def test_copy(ray_df):
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
+def test_copy(ray_df, pandas_df):
+    # pandas_df is unused but there so there won't be confusing list comprehension
+    # stuff in the pytest.mark.parametrize
     new_ray_df = ray_df.copy()
 
     assert new_ray_df is not ray_df
@@ -956,22 +1020,22 @@ def test_copy(ray_df):
     )
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_sum(ray_df, pandas_df):
     assert ray_df.sum().equals(pandas_df.sum())
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_abs(ray_df, pandas_df):
     assert ray_df_equals_pandas(ray_df.abs(), pandas_df.abs())
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_keys(ray_df, pandas_df):
     assert ray_df.keys().equals(pandas_df.keys())
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_transpose(ray_df, pandas_df):
     assert ray_df_equals_pandas(ray_df.T, pandas_df.T)
     assert ray_df_equals_pandas(ray_df.transpose(), pandas_df.transpose())
@@ -985,12 +1049,12 @@ def test_get(ray_df, pandas_df, key):
     )
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_get_dtype_counts(ray_df, pandas_df):
     assert ray_df.get_dtype_counts().equals(pandas_df.get_dtype_counts())
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_get_ftype_counts(ray_df, pandas_df):
     assert ray_df.get_ftype_counts().equals(pandas_df.get_ftype_counts())
 
@@ -1027,16 +1091,16 @@ def test_align():
         ray_df.align(None)
 
 
-@pytest.fixture
-def test_all(ray_df, pd_df):
-    assert pd_df.all().equals(ray_df.all())
-    assert pd_df.all(axis=1).equals(ray_df.all(axis=1))
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
+def test_all(ray_df, pandas_df):
+    assert pandas_df.all().equals(ray_df.all())
+    assert pandas_df.all(axis=1).equals(ray_df.all(axis=1))
 
 
-@pytest.fixture
-def test_any(ray_df, pd_df):
-    assert pd_df.any().equals(ray_df.any())
-    assert pd_df.any(axis=1).equals(ray_df.any(axis=1))
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
+def test_any(ray_df, pandas_df):
+    assert pandas_df.any().equals(ray_df.any())
+    assert pandas_df.any(axis=1).equals(ray_df.any(axis=1))
 
 
 def test_append():
@@ -1184,18 +1248,16 @@ def test_bfill():
     assert ray_df_equals_pandas(ray_df.bfill(), test_data.tsframe.bfill())
 
 
-@pytest.fixture
-def test_bool(ray_df, pd_df):
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
+def test_bool(ray_df, pandas_df):
     with pytest.raises(ValueError):
         ray_df.bool()
-
-    with pytest.raises(ValueError):
         ray_df.__bool__()
 
-    single_bool_pd_df = pandas.DataFrame([True])
+    single_bool_pandas_df = pandas.DataFrame([True])
     single_bool_ray_df = pd.DataFrame([True])
 
-    assert single_bool_pd_df.bool() == single_bool_ray_df.bool()
+    assert single_bool_pandas_df.bool() == single_bool_ray_df.bool()
 
     with pytest.raises(ValueError):
         # __bool__ always raises this error for DataFrames
@@ -1314,10 +1376,10 @@ def test_corrwith():
         ray_df.corrwith(None)
 
 
-@pytest.fixture
-def test_count(ray_df, pd_df):
-    assert ray_df.count().equals(pd_df.count())
-    assert ray_df.count(axis=1).equals(pd_df.count(axis=1))
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
+def test_count(ray_df, pandas_df):
+    assert ray_df.count().equals(pandas_df.count())
+    assert ray_df.count(axis=1).equals(pandas_df.count(axis=1))
 
 
 @pytest.mark.skip(reason="Defaulting to Pandas")
@@ -1328,32 +1390,32 @@ def test_cov():
         ray_df.cov()
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_cummax(ray_df, pandas_df):
     assert ray_df_equals_pandas(ray_df.cummax(), pandas_df.cummax())
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_cummin(ray_df, pandas_df):
     assert ray_df_equals_pandas(ray_df.cummin(), pandas_df.cummin())
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_cumprod(ray_df, pandas_df):
     assert ray_df_equals_pandas(ray_df.cumprod(), pandas_df.cumprod())
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_cumsum(ray_df, pandas_df):
     assert ray_df_equals_pandas(ray_df.cumsum(), pandas_df.cumsum())
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_describe(ray_df, pandas_df):
     assert ray_df_equals_pandas(ray_df.describe(), pandas_df.describe())
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_diff(ray_df, pandas_df):
     assert ray_df_equals_pandas(ray_df.diff(), pandas_df.diff())
     assert ray_df_equals_pandas(ray_df.diff(axis=1), pandas_df.diff(axis=1))
@@ -1470,66 +1532,66 @@ def test_drop_duplicates():
         ray_df.drop_duplicates()
 
 
-@pytest.fixture
-def test_dropna(ray_df, pd_df):
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
+def test_dropna(ray_df, pandas_df):
     assert ray_df_equals_pandas(
-        ray_df.dropna(axis=1, how="all"), pd_df.dropna(axis=1, how="all")
+        ray_df.dropna(axis=1, how="all"), pandas_df.dropna(axis=1, how="all")
     )
 
     assert ray_df_equals_pandas(
-        ray_df.dropna(axis=1, how="any"), pd_df.dropna(axis=1, how="any")
+        ray_df.dropna(axis=1, how="any"), pandas_df.dropna(axis=1, how="any")
     )
 
     assert ray_df_equals_pandas(
-        ray_df.dropna(axis=0, how="all"), pd_df.dropna(axis=0, how="all")
+        ray_df.dropna(axis=0, how="all"), pandas_df.dropna(axis=0, how="all")
     )
 
-    assert ray_df_equals_pandas(ray_df.dropna(thresh=2), pd_df.dropna(thresh=2))
+    assert ray_df_equals_pandas(ray_df.dropna(thresh=2), pandas_df.dropna(thresh=2))
 
 
-@pytest.fixture
-def test_dropna_inplace(ray_df, pd_df):
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
+def test_dropna_inplace(ray_df, pandas_df):
     ray_df = ray_df.copy()
-    pd_df = pd_df.copy()
+    pandas_df = pandas_df.copy()
 
     ray_df.dropna(thresh=2, inplace=True)
-    pd_df.dropna(thresh=2, inplace=True)
+    pandas_df.dropna(thresh=2, inplace=True)
 
-    assert ray_df_equals_pandas(ray_df, pd_df)
+    assert ray_df_equals_pandas(ray_df, pandas_df)
 
     ray_df.dropna(axis=1, how="any", inplace=True)
-    pd_df.dropna(axis=1, how="any", inplace=True)
+    pandas_df.dropna(axis=1, how="any", inplace=True)
 
-    assert ray_df_equals_pandas(ray_df, pd_df)
+    assert ray_df_equals_pandas(ray_df, pandas_df)
 
 
-@pytest.fixture
-def test_dropna_multiple_axes(ray_df, pd_df):
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
+def test_dropna_multiple_axes(ray_df, pandas_df):
     assert ray_df_equals_pandas(
-        ray_df.dropna(how="all", axis=[0, 1]), pd_df.dropna(how="all", axis=[0, 1])
+        ray_df.dropna(how="all", axis=[0, 1]), pandas_df.dropna(how="all", axis=[0, 1])
     )
     assert ray_df_equals_pandas(
-        ray_df.dropna(how="all", axis=(0, 1)), pd_df.dropna(how="all", axis=(0, 1))
+        ray_df.dropna(how="all", axis=(0, 1)), pandas_df.dropna(how="all", axis=(0, 1))
     )
 
 
-@pytest.fixture
-def test_dropna_multiple_axes_inplace(ray_df, pd_df):
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
+def test_dropna_multiple_axes_inplace(ray_df, pandas_df):
     ray_df_copy = ray_df.copy()
-    pd_df_copy = pd_df.copy()
+    pd_df_copy = pandas_df.copy()
 
     ray_df_copy.dropna(how="all", axis=[0, 1], inplace=True)
-    pd_df_copy.dropna(how="all", axis=[0, 1], inplace=True)
+    pandas_df_copy.dropna(how="all", axis=[0, 1], inplace=True)
 
-    assert ray_df_equals_pandas(ray_df_copy, pd_df_copy)
+    assert ray_df_equals_pandas(ray_df_copy, pandas_df_copy)
 
     ray_df_copy = ray_df.copy()
-    pd_df_copy = pd_df.copy()
+    pandas_df_copy = pandas_df.copy()
 
     ray_df_copy.dropna(how="all", axis=(0, 1), inplace=True)
-    pd_df_copy.dropna(how="all", axis=(0, 1), inplace=True)
+    pandas_df_copy.dropna(how="all", axis=(0, 1), inplace=True)
 
-    assert ray_df_equals_pandas(ray_df_copy, pd_df_copy)
+    assert ray_df_equals_pandas(ray_df_copy, pandas_df_copy)
 
 
 @pytest.fixture
@@ -1557,8 +1619,10 @@ def test_dropna_subset(ray_df, pd_df, column_subsets, row_subsets):
         )
 
 
-@pytest.fixture
-def test_dropna_subset_error(ray_df):
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
+def test_dropna_subset_error(ray_df, pandas_df):
+    # pandas_df is unused but there so there won't be confusing list comprehension
+    # stuff in the pytest.mark.parametrize
     with pytest.raises(KeyError):
         ray_df.dropna(subset=list("EF"))
 
@@ -2042,7 +2106,7 @@ def test_first():
         ray_df.first(None)
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_first_valid_index(ray_df, pandas_df):
     assert ray_df.first_valid_index() == (pandas_df.first_valid_index())
 
@@ -2088,12 +2152,12 @@ def test_hist():
         ray_df.hist(None)
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_idxmax(ray_df, pandas_df):
     assert ray_df.idxmax().equals(pandas_df.idxmax())
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_idxmin(ray_df, pandas_df):
     assert ray_df.idxmin().equals(pandas_df.idxmin())
 
@@ -2146,7 +2210,7 @@ def test_interpolate():
         ray_df.interpolate()
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_items(ray_df, pandas_df):
     ray_items = ray_df.items()
     pandas_items = pandas_df.items()
@@ -2157,7 +2221,7 @@ def test_items(ray_df, pandas_df):
         assert pandas_index == ray_index
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_iteritems(ray_df, pandas_df):
     ray_items = ray_df.iteritems()
     pandas_items = pandas_df.iteritems()
@@ -2168,7 +2232,7 @@ def test_iteritems(ray_df, pandas_df):
         assert pandas_index == ray_index
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_iterrows(ray_df, pandas_df):
     ray_iterrows = ray_df.iterrows()
     pandas_iterrows = pandas_df.iterrows()
@@ -2179,7 +2243,7 @@ def test_iterrows(ray_df, pandas_df):
         assert pandas_index == ray_index
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_itertuples(ray_df, pandas_df):
     # test default
     ray_it_default = ray_df.itertuples()
@@ -2256,7 +2320,7 @@ def test_last():
         ray_df.last(None)
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_last_valid_index(ray_df, pandas_df):
     assert ray_df.last_valid_index() == (pandas_df.last_valid_index())
 
@@ -2293,7 +2357,7 @@ def test_mask():
         ray_df.mask(None)
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_max(ray_df, pandas_df):
     assert ray_series_equals_pandas(ray_df.max(), pandas_df.max())
 
@@ -2304,12 +2368,12 @@ def test_max(ray_df, pandas_df):
     )
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_mean(ray_df, pandas_df):
     assert ray_df.mean().equals(pandas_df.mean())
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_median(ray_df, pandas_df):
     assert ray_df.median().equals(pandas_df.median())
 
@@ -2392,7 +2456,7 @@ def test_merge():
         ray_df_equals_pandas(ray_result, pandas_result)
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_min(ray_df, pandas_df):
     assert ray_series_equals_pandas(ray_df.min(), pandas_df.min())
     assert ray_series_equals_pandas(ray_df.min(axis=1), pandas_df.min(axis=1))
@@ -2402,7 +2466,7 @@ def test_mod():
     test_inter_df_math("mod", simple=False)
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_mode(ray_df, pandas_df):
     assert ray_series_equals_pandas(ray_df.mode(), pandas_df.mode())
     assert ray_series_equals_pandas(ray_df.mode(axis=1), pandas_df.mode(axis=1))
@@ -2428,12 +2492,12 @@ def test_nlargest():
         ray_df.nlargest(None, None)
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_notna(ray_df, pandas_df):
     assert ray_df_equals_pandas(ray_df.notna(), pandas_df.notna())
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_notnull(ray_df, pandas_df):
     assert ray_df_equals_pandas(ray_df.notnull(), pandas_df.notnull())
 
@@ -2446,7 +2510,7 @@ def test_nsmallest():
         ray_df.nsmallest(None, None)
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_nunique(ray_df, pandas_df):
     assert ray_df_equals_pandas(ray_df.nunique(), pandas_df.nunique())
     assert ray_df_equals_pandas(ray_df.nunique(axis=1), pandas_df.nunique(axis=1))
@@ -2460,7 +2524,7 @@ def test_pct_change():
         ray_df.pct_change()
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_pipe(ray_df, pandas_df):
     n = len(ray_df.index)
     a, b, c = 2 % n, 0, 3 % n
@@ -2514,7 +2578,7 @@ def test_plot():
         assert np.array_equal(l.get_ydata(), r.get_ydata())
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_pop(ray_df, pandas_df):
     temp_ray_df = ray_df.copy()
     temp_pandas_df = pandas_df.copy()
@@ -2528,12 +2592,12 @@ def test_pow():
     test_inter_df_math("pow", simple=False)
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_prod(ray_df, pandas_df):
     assert ray_df.prod().equals(pandas_df.prod())
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_product(ray_df, pandas_df):
     assert ray_df.product().equals(pandas_df.product())
 
@@ -2554,7 +2618,7 @@ def test_radd():
     test_inter_df_math_right_ops("radd")
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_rank(ray_df, pandas_df):
     assert ray_df_equals_pandas(ray_df.rank(), pandas_df.rank())
     assert ray_df_equals_pandas(ray_df.rank(axis=1), pandas_df.rank(axis=1))
@@ -2895,10 +2959,10 @@ def test_rolling():
         ray_df.rolling(None)
 
 
-@pytest.fixture
-def test_round(ray_df, pd_df):
-    assert ray_df_equals_pandas(ray_df.round(), pd_df.round())
-    assert ray_df_equals_pandas(ray_df.round(1), pd_df.round(1))
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
+def test_round(ray_df, pandas_df):
+    assert ray_df_equals_pandas(ray_df.round(), pandas_df.round())
+    assert ray_df_equals_pandas(ray_df.round(1), pandas_df.round(1))
 
 
 def test_rpow():
@@ -2916,17 +2980,17 @@ def test_rtruediv():
     test_inter_df_math_right_ops("rtruediv")
 
 
-@pytest.fixture
-def test_sample(ray_df, pd_df):
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
+def test_sample(ray_df, pandas_df):
     with pytest.raises(ValueError):
         ray_df.sample(n=3, frac=0.4)
 
     assert ray_df_equals_pandas(
         ray_df.sample(frac=0.5, random_state=42),
-        pd_df.sample(frac=0.5, random_state=42),
+        pandas_df.sample(frac=0.5, random_state=42),
     )
     assert ray_df_equals_pandas(
-        ray_df.sample(n=2, random_state=42), pd_df.sample(n=2, random_state=42)
+        ray_df.sample(n=2, random_state=42), pandas_df.sample(n=2, random_state=42)
     )
 
 
@@ -3007,7 +3071,7 @@ def test_shift():
         ray_df.shift()
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_skew(ray_df, pandas_df):
     assert ray_df_equals_pandas(ray_df.skew(), pandas_df.skew())
     assert ray_df_equals_pandas(ray_df.skew(axis=1), pandas_df.skew(axis=1))
@@ -3087,7 +3151,7 @@ def test_stack():
         ray_df.stack()
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_std(ray_df, pandas_df):
     assert ray_df.std().equals(pandas_df.std())
 
@@ -3116,7 +3180,7 @@ def test_swaplevel():
         ray_df.swaplevel()
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_tail(ray_df, pandas_df):
     assert ray_df_equals_pandas(ray_df.tail(), pandas_df.tail())
 
@@ -3163,7 +3227,7 @@ def test_to_xarray():
         ray_df.to_xarray()
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_transform(ray_df, pandas_df):
     assert ray_df_equals_pandas(
         ray_df.transform(lambda df: df.isna()),
@@ -3229,7 +3293,7 @@ def test_update():
     assert ray_df_equals(df, expected)
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_var(ray_df, pandas_df):
     # Because of some differences in floating point arithmetic, we need to check that
     # they are almost equal if they are not identically equal.
@@ -3272,12 +3336,12 @@ def test_xs():
         ray_df.xs(None)
 
 
-@pytest.fixture
-def test___getitem__(ray_df, pd_df):
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
+def test___getitem__(ray_df, pandas_df):
     ray_col = ray_df.__getitem__("col1")
     assert isinstance(ray_col, pandas.Series)
 
-    pd_col = pd_df["col1"]
+    pd_col = pandas_df["col1"]
     assert pd_col.equals(ray_col)
 
 
@@ -3306,7 +3370,7 @@ def test___setitem__():
         ray_df.__setitem__(None, None)
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test___len__(ray_df, pandas_df):
     assert len(ray_df) == len(pandas_df)
 
@@ -3319,10 +3383,10 @@ def test___unicode__():
         ray_df.__unicode__()
 
 
-@pytest.fixture
-def test___neg__(ray_df, pd_df):
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
+def test___neg__(ray_df, pandas_df):
     ray_df_neg = ray_df.__neg__()
-    assert pd_df.__neg__().equals(to_pandas(ray_df_neg))
+    assert pandas_df.__neg__().equals(to_pandas(ray_df_neg))
 
 
 @pytest.mark.skip(reason="Defaulting to Pandas")
@@ -3341,15 +3405,15 @@ def test___hash__():
         ray_df.__hash__()
 
 
-@pytest.fixture
-def test___iter__(ray_df, pd_df):
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
+def test___iter__(ray_df, pandas_df):
     ray_iterator = ray_df.__iter__()
 
     # Check that ray_iterator implements the iterator interface
     assert hasattr(ray_iterator, "__iter__")
     assert hasattr(ray_iterator, "next") or hasattr(ray_iterator, "__next__")
 
-    pd_iterator = pd_df.__iter__()
+    pd_iterator = pandas_df.__iter__()
     assert list(ray_iterator) == list(pd_iterator)
 
 
@@ -3366,7 +3430,7 @@ def test___nonzero__():
         ray_df.__nonzero__()
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test___abs__(ray_df, pandas_df):
     assert ray_df_equals_pandas(abs(ray_df), abs(pandas_df))
 
@@ -3379,7 +3443,7 @@ def test___round__():
         ray_df.__round__()
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test___array__(ray_df, pandas_df):
     assert_array_equal(ray_df.__array__(), pandas_df.__array__())
 
@@ -3400,19 +3464,19 @@ def test___setstate__():
         ray_df.__setstate__(None)
 
 
-@pytest.fixture
-def test___delitem__(ray_df, pd_df):
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
+def test___delitem__(ray_df, pandas_df):
     ray_df = ray_df.copy()
-    pd_df = pd_df.copy()
+    pandas_df = pandas_df.copy()
     ray_df.__delitem__("col1")
-    pd_df.__delitem__("col1")
-    assert ray_df_equals_pandas(ray_df, pd_df)
+    pandas_df.__delitem__("col1")
+    assert ray_df_equals_pandas(ray_df, pandas_df)
 
     # Issue 2027
-    last_label = pd_df.iloc[:, -1].name
+    last_label = pandas_df.iloc[:, -1].name
     ray_df.__delitem__(last_label)
-    pd_df.__delitem__(last_label)
-    ray_df_equals_pandas(ray_df, pd_df)
+    pandas_df.__delitem__(last_label)
+    ray_df_equals_pandas(ray_df, pandas_df)
 
 
 @pytest.mark.skip(reason="Defaulting to Pandas")
@@ -3423,16 +3487,16 @@ def test___finalize__():
         ray_df.__finalize__(None)
 
 
-@pytest.fixture
-def test___copy__(ray_df, pd_df):
-    ray_df_copy, pd_df_copy = ray_df.__copy__(), pd_df.__copy__()
-    assert ray_df_equals_pandas(ray_df_copy, pd_df_copy)
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
+def test___copy__(ray_df, pandas_df):
+    ray_df_copy, pandas_df_copy = ray_df.__copy__(), pandas_df.__copy__()
+    assert ray_df_equals_pandas(ray_df_copy, pandas_df_copy)
 
 
-@pytest.fixture
-def test___deepcopy__(ray_df, pd_df):
-    ray_df_copy, pd_df_copy = ray_df.__deepcopy__(), pd_df.__deepcopy__()
-    assert ray_df_equals_pandas(ray_df_copy, pd_df_copy)
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
+def test___deepcopy__(ray_df, pandas_df):
+    ray_df_copy, pandas_df_copy = ray_df.__deepcopy__(), pandas_df.__deepcopy__()
+    assert ray_df_equals_pandas(ray_df_copy, pandas_df_copy)
 
 
 @pytest.mark.skip(reason="Defaulting to Pandas")
@@ -3512,32 +3576,32 @@ def test___repr__():
     assert repr(pandas_df) == repr(ray_df)
 
 
-@pytest.fixture
-def test_loc(ray_df, pd_df):
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
+def test_loc(ray_df, pandas_df):
     # Scaler
-    assert ray_df.loc[0, "col1"] == pd_df.loc[0, "col1"]
+    assert ray_df.loc[0, "col1"] == pandas_df.loc[0, "col1"]
 
     # Series
-    assert ray_df.loc[0].equals(pd_df.loc[0])
-    assert ray_df.loc[1:, "col1"].equals(pd_df.loc[1:, "col1"])
-    assert ray_df.loc[1:2, "col1"].equals(pd_df.loc[1:2, "col1"])
+    assert ray_df.loc[0].equals(pandas_df.loc[0])
+    assert ray_df.loc[1:, "col1"].equals(pandas_df.loc[1:, "col1"])
+    assert ray_df.loc[1:2, "col1"].equals(pandas_df.loc[1:2, "col1"])
 
     # DataFrame
-    assert ray_df_equals_pandas(ray_df.loc[[1, 2]], pd_df.loc[[1, 2]])
+    assert ray_df_equals_pandas(ray_df.loc[[1, 2]], pandas_df.loc[[1, 2]])
 
     # See issue #80
     # assert ray_df_equals_pandas(ray_df.loc[[1, 2], ['col1']],
-    #                             pd_df.loc[[1, 2], ['col1']])
+    #                             pandas_df.loc[[1, 2], ['col1']])
     assert ray_df_equals_pandas(
-        ray_df.loc[1:2, "col1":"col2"], pd_df.loc[1:2, "col1":"col2"]
+        ray_df.loc[1:2, "col1":"col2"], pandas_df.loc[1:2, "col1":"col2"]
     )
 
     # Write Item
     ray_df_copy = ray_df.copy()
-    pd_df_copy = pd_df.copy()
+    pandas_df_copy = pandas_df.copy()
     ray_df_copy.loc[[1, 2]] = 42
-    pd_df_copy.loc[[1, 2]] = 42
-    assert ray_df_equals_pandas(ray_df_copy, pd_df_copy)
+    pandas_df_copy.loc[[1, 2]] = 42
+    assert ray_df_equals_pandas(ray_df_copy, pandas_df_copy)
 
 
 @pytest.mark.skip(reason="Defaulting to Pandas")
@@ -3566,32 +3630,32 @@ def test_ix():
         ray_df.ix()
 
 
-@pytest.fixture
-def test_iloc(ray_df, pd_df):
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
+def test_iloc(ray_df, pandas_df):
     # Scaler
-    assert ray_df.iloc[0, 1] == pd_df.iloc[0, 1]
+    assert ray_df.iloc[0, 1] == pandas_df.iloc[0, 1]
 
     # Series
-    assert ray_df.iloc[0].equals(pd_df.iloc[0])
-    assert ray_df.iloc[1:, 0].equals(pd_df.iloc[1:, 0])
-    assert ray_df.iloc[1:2, 0].equals(pd_df.iloc[1:2, 0])
+    assert ray_df.iloc[0].equals(pandas_df.iloc[0])
+    assert ray_df.iloc[1:, 0].equals(pandas_df.iloc[1:, 0])
+    assert ray_df.iloc[1:2, 0].equals(pandas_df.iloc[1:2, 0])
 
     # DataFrame
-    assert ray_df_equals_pandas(ray_df.iloc[[1, 2]], pd_df.iloc[[1, 2]])
+    assert ray_df_equals_pandas(ray_df.iloc[[1, 2]], pandas_df.iloc[[1, 2]])
     # See issue #80
     # assert ray_df_equals_pandas(ray_df.iloc[[1, 2], [1, 0]],
-    #                             pd_df.iloc[[1, 2], [1, 0]])
-    assert ray_df_equals_pandas(ray_df.iloc[1:2, 0:2], pd_df.iloc[1:2, 0:2])
+    #                             pandas_df.iloc[[1, 2], [1, 0]])
+    assert ray_df_equals_pandas(ray_df.iloc[1:2, 0:2], pandas_df.iloc[1:2, 0:2])
 
     # Issue #43
     ray_df.iloc[0:3, :]
 
     # Write Item
     ray_df_copy = ray_df.copy()
-    pd_df_copy = pd_df.copy()
+    pandas_df_copy = pandas_df.copy()
     ray_df_copy.iloc[[1, 2]] = 42
-    pd_df_copy.iloc[[1, 2]] = 42
-    assert ray_df_equals_pandas(ray_df_copy, pd_df_copy)
+    pandas_df_copy.iloc[[1, 2]] = 42
+    assert ray_df_equals_pandas(ray_df_copy, pandas_df_copy)
 
 
 def test__doc__():
