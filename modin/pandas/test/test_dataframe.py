@@ -448,21 +448,9 @@ def test_get_dtype_counts(ray_df, pandas_df):
     assert df_equals(ray_df.get_dtype_counts(), pandas_df.get_dtype_counts())
 
 
-def test_get_dummies():
-    frame_data = {"A": ["a", "b", "a"], "B": ["b", "a", "c"], "C": [1, 2, 3]}
-    ray_df = pd.DataFrame(frame_data)
-    pd_df = pandas.DataFrame(frame_data)
-    assert df_equals(pd.get_dummies(ray_df), pandas.get_dummies(pd_df))
-
-    frame_data = {"A": ["a"], "B": ["b"]}
-    ray_df = pd.DataFrame(frame_data)
-    pd_df = pandas.DataFrame(frame_data)
-    assert df_equals(pd.get_dummies(ray_df), pandas.get_dummies(pd_df))
-
-    frame_data = {"A": [1, 2, 3], "B": [4, 5, 6], "C": [1, 2, 3]}
-    ray_df = pd.DataFrame(frame_data)
-    pd_df = pandas.DataFrame(frame_data)
-    assert df_equals(pd.get_dummies(ray_df), pandas.get_dummies(pd_df))
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
+def test_get_dummies(ray_df, pandas_df):
+    assert df_equals(pd.get_dummies(ray_df), pandas.get_dummies(pandas_df))
 
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)

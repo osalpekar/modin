@@ -9,7 +9,7 @@ def df_equals(df1, df2):
     if isinstance(df2, pd.DataFrame):
         df2 = to_pandas(df2)
     
-    if isinstance(df1, (pd.DataFrame, pd.Series)) and isinstance(df2, (pd.DataFrame, pd.Series)):
+    if isinstance(df1, (pandas.DataFrame, pandas.Series)) and isinstance(df2, (pandas.DataFrame, pandas.Series)):
         return df1.equals(df2)
     else:
         return df1 == df2
