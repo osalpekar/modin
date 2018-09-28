@@ -90,8 +90,30 @@ test_funcs = {
         "identity": lambda x: x, 
         "return false": lambda x: False 
         }
-test_func_keys = list(test_dfs.keys())
-test_func_values = list(test_dfs.values())
+test_func_keys = list(test_func.keys())
+test_func_values = list(test_func.values())
+
+# Test functions for query
+query_funcs = { 
+        "col1 < col2": "col1 < col2",
+        "col3 > col4": "col3 > col4",
+        "col1 == col2": "col1 == col2",
+        "(col2 > col1) and (col1 < col3)": "(col2 > col1) and (col1 < col3)" 
+        }
+query_func_keys = list(query_func.keys())
+query_func_values = list(query_func.values())
+
+# Test q values for quantiles
+quantiles = {
+        "0.25": 0.25, 
+        "0.5": 0.5, 
+        "0.75": 0.75, 
+        "0.66": 0.66, 
+        "0.01": 0.01,
+        "list": [0.25, 0.5, 0.75, 0.66, 0.01]
+        }
+quantiles_keys = list(quantiles.keys())
+quantiles_values = list(quantiles.values())
 
 # END Test input data and functions
 
@@ -126,13 +148,6 @@ def test_int_dataframe():
         lambda x: x * x,
         lambda x: x,
         lambda x: False,
-    ]
-
-    query_funcs = [
-        "col1 < col2",
-        "col3 > col4",
-        "col1 == col2",
-        "(col2 > col1) and (col1 < col3)",
     ]
 
     keys = ["col1", "col2", "col3", "col4"]
@@ -2695,16 +2710,17 @@ def test_product(ray_df, pandas_df):
     assert df_equals(ray_df.product(), pandas_df.product())
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
+@pytest.mark.parametrize("q", quantiles_values, ids=quantiles_keys)
 def test_quantile(ray_df, pandas_df, q):
     assert df_equals(ray_df.quantile(q), pandas_df.quantile(q))
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
+@pytest.mark.parametrize("funcs", query_func_values, ids=query_func_keys)
 def test_query(ray_df, pandas_df, funcs):
-    for f in funcs:
-        pandas_df_new, ray_df_new = pandas_df.query(f), ray_df.query(f)
-        assert df_equals(pandas_df_new, to_pandas(ray_df_new))
+    pandas_df_new, ray_df_new = pandas_df.query(f), ray_df.query(f)
+    assert df_equals(pandas_df_new, to_pandas(ray_df_new))
 
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
