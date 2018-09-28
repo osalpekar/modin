@@ -802,9 +802,12 @@ def test_corrwith(ray_df, pandas_df):
 
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
-def test_count(ray_df, pandas_df):
-    assert df_equals(ray_df.count(), pandas_df.count())
-    assert df_equals(ray_df.count(axis=1), pandas_df.count(axis=1))
+@pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
+@pytest.mark.parametrize("numeric_only", bool_arg_values, ids=arg_keys("numeric_only", bool_arg_keys))
+def test_count(ray_df, pandas_df, axis, numeric_only):
+    ray_result = ray_df.count(axis=axis, numeric_only=numeric_only)
+    pandas_result = pandas_df.count(axis=axis, numeric_only=numeric_only)
+    assert df_equals(ray_result, pandas_result)
 
 
 @pytest.mark.skip(reason="Defaulting to Pandas")
