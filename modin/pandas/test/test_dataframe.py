@@ -1295,6 +1295,14 @@ def test_bfill():
     assert df_equals(ray_df.bfill(), test_data.tsframe.bfill())
 
 
+@pytest.mark.skip(reason="Defaulting to Pandas")
+def test_blocks():
+    ray_df = create_test_dataframe()
+
+    with pytest.raises(NotImplementedError):
+        ray_df.blocks
+
+
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_bool(ray_df, pandas_df):
     with pytest.raises(ValueError):
@@ -2176,6 +2184,14 @@ def test_hist():
 
     with pytest.raises(NotImplementedError):
         ray_df.hist(None)
+
+
+@pytest.mark.skip(reason="Defaulting to Pandas")
+def test_iat():
+    ray_df = create_test_dataframe()
+
+    with pytest.raises(NotImplementedError):
+        ray_df.iat()
 
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
@@ -3176,6 +3192,14 @@ def test_std(ray_df, pandas_df):
     assert df_equals(ray_df.std(), pandas_df.std())
 
 
+@pytest.mark.skip(reason="Defaulting to Pandas")
+def test_style():
+    ray_df = create_test_dataframe()
+
+    with pytest.raises(NotImplementedError):
+        ray_df.style
+
+
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_sum(ray_df, pandas_df):
     assert df_equals(ray_df.sum(), pandas_df.sum())
@@ -3487,6 +3511,13 @@ def test___array__(ray_df, pandas_df):
     assert_array_equal(ray_df.__array__(), pandas_df.__array__())
 
 
+def test___bool__():
+    ray_df = create_test_dataframe()
+
+    with pytest.raises(NotImplementedError):
+        ray_df.__bool__()
+
+
 @pytest.mark.skip(reason="Defaulting to Pandas")
 def test___getstate__():
     ray_df = create_test_dataframe()
@@ -3536,30 +3567,6 @@ def test___copy__(ray_df, pandas_df):
 def test___deepcopy__(ray_df, pandas_df):
     ray_df_copy, pandas_df_copy = ray_df.__deepcopy__(), pandas_df.__deepcopy__()
     assert df_equals(ray_df_copy, pandas_df_copy)
-
-
-@pytest.mark.skip(reason="Defaulting to Pandas")
-def test_blocks():
-    ray_df = create_test_dataframe()
-
-    with pytest.raises(NotImplementedError):
-        ray_df.blocks
-
-
-@pytest.mark.skip(reason="Defaulting to Pandas")
-def test_style():
-    ray_df = create_test_dataframe()
-
-    with pytest.raises(NotImplementedError):
-        ray_df.style
-
-
-@pytest.mark.skip(reason="Defaulting to Pandas")
-def test_iat():
-    ray_df = create_test_dataframe()
-
-    with pytest.raises(NotImplementedError):
-        ray_df.iat()
 
 
 def test___repr__():
