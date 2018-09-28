@@ -818,23 +818,55 @@ def test_cov(ray_df, pandas_df):
 
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
-def test_cummax(ray_df, pandas_df):
-    assert df_equals(ray_df.cummax(), pandas_df.cummax())
+@pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
+@pytest.mark.parametrize("skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys))
+def test_cummax(request, ray_df, pandas_df, axis, skipna):
+    if name_contains(request.node.name, numeric_dfs):
+        ray_result = ray_df.cummax(axis=axis, skipna=skipna)
+        pandas_result = pandas_df.cummax(axis=axis, skipna=skipna)
+        assert df_equals(ray_result, pandas_result)
+    else:
+        with pytest.raises(TypeError):
+            ray_result = ray_df.cummax(axis=axis, skipna=skipna)
 
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
-def test_cummin(ray_df, pandas_df):
-    assert df_equals(ray_df.cummin(), pandas_df.cummin())
+@pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
+@pytest.mark.parametrize("skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys))
+def test_cummin(request, ray_df, pandas_df, axis, skipna):
+    if name_contains(request.node.name, numeric_dfs):
+        ray_result = ray_df.cummin(axis=axis, skipna=skipna)
+        pandas_result = pandas_df.cummin(axis=axis, skipna=skipna)
+        assert df_equals(ray_result, pandas_result)
+    else:
+        with pytest.raises(TypeError):
+            ray_result = ray_df.cummin(axis=axis, skipna=skipna)
 
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
-def test_cumprod(ray_df, pandas_df):
-    assert df_equals(ray_df.cumprod(), pandas_df.cumprod())
+@pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
+@pytest.mark.parametrize("skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys))
+def test_cumprod(request, ray_df, pandas_df, axis, skipna):
+    if name_contains(request.node.name, numeric_dfs):
+        ray_result = ray_df.cumprod(axis=axis, skipna=skipna)
+        pandas_result = pandas_df.cumprod(axis=axis, skipna=skipna)
+        assert df_equals(ray_result, pandas_result)
+    else:
+        with pytest.raises(TypeError):
+            ray_result = ray_df.cumprod(axis=axis, skipna=skipna)
 
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
-def test_cumsum(ray_df, pandas_df):
-    assert df_equals(ray_df.cumsum(), pandas_df.cumsum())
+@pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
+@pytest.mark.parametrize("skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys))
+def test_cumsum(request, ray_df, pandas_df, axis, skipna):
+    if name_contains(request.node.name, numeric_dfs):
+        ray_result = ray_df.cumsum(axis=axis, skipna=skipna)
+        pandas_result = pandas_df.cumsum(axis=axis, skipna=skipna)
+        assert df_equals(ray_result, pandas_result)
+    else:
+        with pytest.raises(TypeError):
+            ray_result = ray_df.cumsum(axis=axis, skipna=skipna)
 
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
