@@ -36,6 +36,7 @@ def df_is_empty(df):
     assert df.size == 0 and df.empty
     assert df.shape[0] == 0 or df.shape[1] == 0
 
+
 def arg_keys(arg_name, keys):
     """Appends arg_name to the front of all values in keys.
 
@@ -47,4 +48,17 @@ def arg_keys(arg_name, keys):
         List of strings with arg_name append to front of keys.
     """
     return ["{0} {1}".format(arg_name, key) for key in keys]
+
+
+def name_contains(test_name, vals):
+    """Determines if any string in vals is a substring of test_name.
+    
+    Args:
+        test_name: (string) String to determine if contains substrings.
+        vals: (list of strings) List of substrings to test for.
+
+    Returns:
+        True if a substring in vals is in test_name, else False.
+    """
+    return any([val in test_name for val in vals])
 

@@ -17,7 +17,7 @@ from modin.pandas.utils import to_pandas
 from numpy.testing import assert_array_equal
 import sys
 
-from .utils import df_equals, df_is_empty, arg_keys
+from .utils import df_equals, df_is_empty, arg_keys, name_contains
 
 # Force matplotlib to not use any Xwindows backend.
 matplotlib.use("Agg")
@@ -106,6 +106,19 @@ query_func = {
         }
 query_func_keys = list(query_func.keys())
 query_func_values = list(query_func.values())
+
+# Test agg functions for apply, agg, and aggregate
+agg_func = {
+        "sum": "sum", 
+        "df sum": lambda df: df.sum(), 
+        "sum mean": ["sum", "mean"], 
+        "sum sum": ["sum", "sum"],
+        "sum df sum": ["sum", lambda df: df.sum()]
+        }
+agg_func_keys = list(agg_func.keys())
+agg_func_values = list(agg_func.values())
+
+numeric_agg_funcs = ["sum mean", "sum sum", "sum df sum"]
 
 # Test q values for quantiles
 quantiles = {
@@ -357,7 +370,7 @@ def test___rsub__():
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_abs(request, ray_df, pandas_df):
-    if any([df_name in request.node.name for df_name in numeric_dfs]):
+    if name_contains(request.node.name, numeric_dfs):
         assert df_equals(ray_df.abs(), pandas_df.abs())
     else:
         with pytest.raises(TypeError):
@@ -375,8 +388,8 @@ def test_add_prefix(ray_df, pandas_df):
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 @pytest.mark.parametrize("testfunc", test_func_values, ids=test_func_keys)
 def test_applymap(request, ray_df, pandas_df, testfunc):
-    if (any([func_name not in request.node.name for func_name in numeric_test_funcs]) or 
-            any([df_name in request.node.name for df_name in numeric_dfs])):
+    if (not name_contains(request.node.name, numeric_test_funcs) or 
+            name_contains(request.node.name, numeric_dfs)):
         new_ray_df = ray_df.applymap(testfunc)
         new_pandas_df = pandas_df.applymap(testfunc)
 
@@ -431,9 +444,7 @@ def test_ftypes(ray_df, pandas_df):
 @pytest.mark.parametrize("key", indices_values, ids=indices_keys)
 def test_get(ray_df, pandas_df, key):
     assert df_equals(ray_df.get(key), pandas_df.get(key))
-    assert df_equals(ray_df.get(key, default="default"),
-        pandas_df.get(key, default="default")
-    )
+    assert df_equals(ray_df.get(key, default="default"), pandas_df.get(key, default="default"))
 
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
@@ -455,24 +466,32 @@ def test_get_ftype_counts(ray_df, pandas_df):
     assert df_equals(ray_df.get_ftype_counts(), pandas_df.get_ftype_counts())
 
 
-@pytest.fixture
-def test_agg(ray_df, pandas_df, func, axis):
-    ray_result = ray_df.agg(func, axis)
-    pandas_result = pandas_df.agg(func, axis)
-    if isinstance(ray_result, pd.DataFrame):
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
+@pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
+@pytest.mark.parametrize("func", agg_func_values, ids=agg_func_keys)
+def test_agg(request, ray_df, pandas_df, axis, func):
+    if (name_contains(request.node.name, ["over rows"]) or
+            not name_contains(request.node.name, numeric_agg_funcs)):
+        ray_result = ray_df.agg(func, axis)
+        pandas_result = pandas_df.agg(func, axis)
         assert df_equals(ray_result, pandas_result)
     else:
-        assert df_equals(ray_result, pandas_result)
+        with pytest.raises(TypeError):
+            ray_result = ray_df.agg(func, axis)
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
+@pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
+@pytest.mark.parametrize("func", agg_func_values, ids=agg_func_keys)
 def test_aggregate(ray_df, pandas_df, func, axis):
-    ray_result = ray_df.aggregate(func, axis)
-    pandas_result = pandas_df.aggregate(func, axis)
-    if isinstance(ray_result, pd.DataFrame):
+    if (name_contains(request.node.name, ["over rows"]) or
+            not name_contains(request.node.name, numeric_agg_funcs)):
+        ray_result = ray_df.aggregate(func, axis)
+        pandas_result = pandas_df.aggregate(func, axis)
         assert df_equals(ray_result, pandas_result)
     else:
-        assert df_equals(ray_result, pandas_result)
+        with pytest.raises(TypeError):
+            ray_result = ray_df.aggregate(func, axis)
 
 
 @pytest.mark.skip(reason="Defaulting to Pandas")
@@ -516,14 +535,18 @@ def test_append():
         ray_df.append(ray_df2, verify_integrity=True)
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
+@pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
+@pytest.mark.parametrize("func", agg_func_values, ids=agg_func_keys)
 def test_apply(ray_df, pandas_df, func, axis):
-    ray_result = ray_df.apply(func, axis)
-    pandas_result = pandas_df.apply(func, axis)
-    if isinstance(ray_result, pd.DataFrame):
+    if (name_contains(request.node.name, ["over rows"]) or
+            not name_contains(request.node.name, numeric_agg_funcs)):
+        ray_result = ray_df.apply(func, axis)
+        pandas_result = pandas_df.apply(func, axis)
         assert df_equals(ray_result, pandas_result)
     else:
-        assert df_equals(ray_result, pandas_result)
+        with pytest.raises(TypeError):
+            ray_result = ray_df.apply(func, axis)
 
 
 @pytest.mark.skip(reason="Defaulting to Pandas")
