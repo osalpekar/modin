@@ -891,10 +891,13 @@ def test_describe(ray_df, pandas_df):
 
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
-def test_diff(ray_df, pandas_df):
-    assert df_equals(ray_df.diff(), pandas_df.diff())
-    assert df_equals(ray_df.diff(axis=1), pandas_df.diff(axis=1))
-    assert df_equals(ray_df.diff(periods=1), pandas_df.diff(periods=1))
+@pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
+@pytest.mark.parametrize("periods", [-5, -1, 0, 1, 5], ids=["-5", "-1", "0", "1", "5"])
+def test_diff(request,ray_df, pandas_df, axis, periods):
+    if name_contains(request.node.name, numeric_dfs):
+        ray_result = ray_df.diff(axis=axis, periods=periods)
+        pandas_result = pandas_df.diff(axis=axis, periods=periods)
+        assert df_equals(ray_result, pandas_result)
 
 
 def test_drop():
@@ -991,30 +994,20 @@ def test_drop_duplicates(ray_df, pandas_df):
 
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
-def test_dropna(ray_df, pandas_df):
-    assert df_equals(ray_df.dropna(axis=1, how="all"), pandas_df.dropna(axis=1, how="all"))
-
-    assert df_equals(ray_df.dropna(axis=1, how="any"), pandas_df.dropna(axis=1, how="any"))
-
-    assert df_equals(ray_df.dropna(axis=0, how="all"), pandas_df.dropna(axis=0, how="all"))
-
-    assert df_equals(ray_df.dropna(thresh=2), pandas_df.dropna(thresh=2))
+@pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
+@pytest.mark.parametrize("how", ["any", "all"], ids=["any", "all"])
+@pytest.mark.parametrize("inplace", bool_arg_values, ids=arg_keys("inplace", bool_arg_keys))
+def test_dropna(ray_df, pandas_df, axis, how, inplace):
+    pandas_result = pandas_df.dropna(axis=axis, how=how, inplace=inplace)
+    ray_result = ray_df.dropna(axis=axis, how=how, inplace=inplace)
+    assert df_equals(ray_result, pandas_result)
 
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_dropna_inplace(ray_df, pandas_df):
-    ray_df = ray_df.copy()
-    pandas_df = pandas_df.copy()
-
-    ray_df.dropna(thresh=2, inplace=True)
-    pandas_df.dropna(thresh=2, inplace=True)
-
-    assert df_equals(ray_df, pandas_df)
-
-    ray_df.dropna(axis=1, how="any", inplace=True)
-    pandas_df.dropna(axis=1, how="any", inplace=True)
-
-    assert df_equals(ray_df, pandas_df)
+    pandas_result = pandas_df.dropna()
+    ray_df.dropna(inplace=True)
+    assert df_equals(ray_df, pandas_result)
 
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
@@ -1042,17 +1035,16 @@ def test_dropna_multiple_axes_inplace(ray_df, pandas_df):
     assert df_equals(ray_df_copy, pandas_df_copy)
 
 
-@pytest.fixture
-def test_dropna_subset(ray_df, pd_df, column_subsets, row_subsets):
-    for subset in column_subsets:
-        assert df_equals(ray_df.dropna(how="all", subset=subset), pd_df.dropna(how="all", subset=subset))
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
+def test_dropna_subset(request, ray_df, pandas_df):
+    if not name_contains(request.node.name, ['empty_data']):
+        column_subset = ray_df.columns[0:2]
+        assert df_equals(ray_df.dropna(how="all", subset=column_subset), pandas_df.dropna(how="all", subset=column_subset))
+        assert df_equals(ray_df.dropna(how="any", subset=column_subset), pandas_df.dropna(how="any", subset=column_subset))
 
-        assert df_equals(ray_df.dropna(how="any", subset=subset), pd_df.dropna(how="any", subset=subset))
-
-    for subset in row_subsets:
-        assert df_equals(ray_df.dropna(how="all", axis=1, subset=subset), pd_df.dropna(how="all", axis=1, subset=subset))
-
-        assert df_equals(ray_df.dropna(how="any", axis=1, subset=subset), pd_df.dropna(how="any", axis=1, subset=subset))
+        row_subset = ray_df.index[0:2]
+        assert df_equals(ray_df.dropna(how="all", axis=1, subset=row_subset), pandas_df.dropna(how="all", axis=1, subset=row_subset))
+        assert df_equals(ray_df.dropna(how="any", axis=1, subset=row_subset), pandas_df.dropna(how="any", axis=1, subset=row_subset))
 
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
@@ -2590,7 +2582,6 @@ def test_to_datetime():
     assert df_equals(pd.to_datetime(ray_df), pandas.to_datetime(pd_df))
 
 
-<<<<<<< 8e6a4cc0abbcf22bb0d7aa0c7d989adb8fd725c6
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_to_records(ray_df, pandas_df):
     ray_df = create_test_dataframe()
