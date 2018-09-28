@@ -823,9 +823,8 @@ def test_dense_nan_df():
     test_dropna_subset(ray_df, pd_df, column_subsets, row_subsets)
     test_dropna_subset_error(ray_df)
 
-
-@pytest.fixture
-def test_inter_df_math(op, simple=False):
+# Test inter df math functions
+def inter_df_math_helper(op, simple=False):
     frame_data = {
         "col1": [0, 1, 2, 3],
         "col2": [4, 5, 6, 7],
@@ -864,8 +863,58 @@ def test_inter_df_math(op, simple=False):
         )
 
 
-@pytest.fixture
-def test_comparison_inter_ops(op):
+def test_add():
+    inter_df_math_helper("add", simple=False)
+
+
+def test_div():
+    inter_df_math_helper("div", simple=False)
+
+
+def test_divide():
+    inter_df_math_helper("divide", simple=False)
+
+
+def test_floordiv():
+    inter_df_math_helper("floordiv", simple=False)
+
+
+def test_mod():
+    inter_df_math_helper("mod", simple=False)
+
+
+def test_mul():
+    inter_df_math_helper("mul", simple=False)
+
+
+def test_multiply():
+    inter_df_math_helper("multiply", simple=False)
+
+
+def test_pow():
+    inter_df_math_helper("pow", simple=False)
+
+
+def test_sub():
+    inter_df_math_helper("sub", simple=False)
+
+
+def test_subtract():
+    inter_df_math_helper("subtract", simple=False)
+
+
+def test_truediv():
+    inter_df_math_helper("truediv", simple=False)
+
+
+def test___div__():
+    inter_df_math_helper("__div__", simple=True)
+
+# END test inter df math functions
+
+
+# Test comparison of inter operation functions
+def comparison_inter_ops_helper(op):
     frame_data = {
         "col1": [0, 1, 2, 3],
         "col2": [4, 5, 6, 7],
@@ -892,8 +941,33 @@ def test_comparison_inter_ops(op):
     )
 
 
-@pytest.fixture
-def test_inter_df_math_right_ops(op):
+def test_eq():
+    comparison_inter_ops_helper("eq")
+
+
+def test_ge():
+    comparison_inter_ops_helper("ge")
+
+
+def test_gt():
+    comparison_inter_ops_helper("gt")
+
+
+def test_le():
+    comparison_inter_ops_helper("le")
+
+
+def test_lt():
+    comparison_inter_ops_helper("lt")
+
+
+def test_ne():
+    comparison_inter_ops_helper("ne")
+# END test comparison of inter operation functions
+
+
+# Test dataframe right operations
+def inter_df_math_right_ops_helper(op):
     frame_data = {
         "col1": [0, 1, 2, 3],
         "col2": [4, 5, 6, 7],
@@ -906,6 +980,52 @@ def test_inter_df_math_right_ops(op):
 
     assert ray_df_equals_pandas(getattr(ray_df, op)(4), getattr(pandas_df, op)(4))
     assert ray_df_equals_pandas(getattr(ray_df, op)(4.0), getattr(pandas_df, op)(4.0))
+
+
+def test_radd():
+    inter_df_math_right_ops_helper("radd")
+
+
+def test_rdiv():
+    inter_df_math_right_ops_helper("rdiv")
+
+
+@pytest.mark.skip(
+    reason="dtypes on different partitions may not match up, " "no fix for this yet"
+)
+def test_rfloordiv():
+    inter_df_math_right_ops_helper("rfloordiv")
+
+
+@pytest.mark.skip(
+    reason="dtypes on different partitions may not match up, " "no fix for this yet"
+)
+def test_rmod():
+    inter_df_math_right_ops_helper("rmod")
+
+
+def test_rmul():
+    inter_df_math_right_ops_helper("rmul")
+
+
+def test_rpow():
+    inter_df_math_right_ops_helper("rpow")
+
+
+def test_rsub():
+    inter_df_math_right_ops_helper("rsub")
+
+
+@pytest.mark.skip(
+    reason="dtypes on different partitions may not match up, " "no fix for this yet"
+)
+def test_rtruediv():
+    inter_df_math_right_ops_helper("rtruediv")
+
+
+def test___rsub__():
+    inter_df_math_right_ops_helper("__rsub__")
+# END test dataframe right operations
 
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
@@ -1030,10 +1150,6 @@ def test_get_dtype_counts(ray_df, pandas_df):
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_get_ftype_counts(ray_df, pandas_df):
     assert ray_df.get_ftype_counts().equals(pandas_df.get_ftype_counts())
-
-
-def test_add():
-    test_inter_df_math("add", simple=False)
 
 
 @pytest.fixture
@@ -1395,14 +1511,6 @@ def test_diff(ray_df, pandas_df):
     assert ray_df_equals_pandas(ray_df.diff(periods=1), pandas_df.diff(periods=1))
 
 
-def test_div():
-    test_inter_df_math("div", simple=False)
-
-
-def test_divide():
-    test_inter_df_math("divide", simple=False)
-
-
 @pytest.mark.skip(reason="Defaulting to Pandas")
 def test_dot():
     ray_df = create_test_dataframe()
@@ -1641,10 +1749,6 @@ def test_empty_df():
     test_is_empty(df)
     assert len(df.index) == 0
     assert len(df.columns) == 0
-
-
-def test_eq():
-    test_comparison_inter_ops("eq")
 
 
 def test_equals():
@@ -2116,12 +2220,24 @@ def test_first_valid_index(ray_df, pandas_df):
     assert ray_df.first_valid_index() == (pandas_df.first_valid_index())
 
 
-def test_floordiv():
-    test_inter_df_math("floordiv", simple=False)
+def test_from_csv():
+    with pytest.raises(NotImplementedError):
+        pd.DataFrame.from_csv(None)
 
 
-def test_ge():
-    test_comparison_inter_ops("ge")
+def test_from_dict():
+    with pytest.raises(NotImplementedError):
+        pd.DataFrame.from_dict(None)
+
+
+def test_from_items():
+    with pytest.raises(NotImplementedError):
+        pd.DataFrame.from_items(None)
+
+
+def test_from_records():
+    with pytest.raises(NotImplementedError):
+        pd.DataFrame.from_records(None)
 
 
 @pytest.mark.skip(reason="Defaulting to Pandas")
@@ -2138,10 +2254,6 @@ def test_get_values():
 
     with pytest.raises(NotImplementedError):
         ray_df.get_values()
-
-
-def test_gt():
-    test_comparison_inter_ops("gt")
 
 
 @pytest.fixture
@@ -2330,20 +2442,12 @@ def test_last_valid_index(ray_df, pandas_df):
     assert ray_df.last_valid_index() == (pandas_df.last_valid_index())
 
 
-def test_le():
-    test_comparison_inter_ops("le")
-
-
 @pytest.mark.skip(reason="Defaulting to Pandas")
 def test_lookup():
     ray_df = create_test_dataframe()
 
     with pytest.raises(NotImplementedError):
         ray_df.lookup(None, None)
-
-
-def test_lt():
-    test_comparison_inter_ops("lt")
 
 
 @pytest.mark.skip(reason="Defaulting to Pandas")
@@ -2467,26 +2571,10 @@ def test_min(ray_df, pandas_df):
     assert ray_series_equals_pandas(ray_df.min(axis=1), pandas_df.min(axis=1))
 
 
-def test_mod():
-    test_inter_df_math("mod", simple=False)
-
-
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_mode(ray_df, pandas_df):
     assert ray_series_equals_pandas(ray_df.mode(), pandas_df.mode())
     assert ray_series_equals_pandas(ray_df.mode(axis=1), pandas_df.mode(axis=1))
-
-
-def test_mul():
-    test_inter_df_math("mul", simple=False)
-
-
-def test_multiply():
-    test_inter_df_math("multiply", simple=False)
-
-
-def test_ne():
-    test_comparison_inter_ops("ne")
 
 
 @pytest.mark.skip(reason="Defaulting to Pandas")
@@ -2593,10 +2681,6 @@ def test_pop(ray_df, pandas_df):
     assert ray_df_equals_pandas(temp_ray_df, temp_pandas_df)
 
 
-def test_pow():
-    test_inter_df_math("pow", simple=False)
-
-
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_prod(ray_df, pandas_df):
     assert ray_df.prod().equals(pandas_df.prod())
@@ -2619,18 +2703,10 @@ def test_query(ray_df, pandas_df, funcs):
         assert pandas_df_new.equals(to_pandas(ray_df_new))
 
 
-def test_radd():
-    test_inter_df_math_right_ops("radd")
-
-
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_rank(ray_df, pandas_df):
     assert ray_df_equals_pandas(ray_df.rank(), pandas_df.rank())
     assert ray_df_equals_pandas(ray_df.rank(axis=1), pandas_df.rank(axis=1))
-
-
-def test_rdiv():
-    test_inter_df_math_right_ops("rdiv")
 
 
 def test_reindex():
@@ -2938,24 +3014,6 @@ def test_reset_index(ray_df, pandas_df, inplace=False):
         assert to_pandas(ray_df_cp).equals(pd_df_cp)
 
 
-@pytest.mark.skip(
-    reason="dtypes on different partitions may not match up, " "no fix for this yet"
-)
-def test_rfloordiv():
-    test_inter_df_math_right_ops("rfloordiv")
-
-
-@pytest.mark.skip(
-    reason="dtypes on different partitions may not match up, " "no fix for this yet"
-)
-def test_rmod():
-    test_inter_df_math_right_ops("rmod")
-
-
-def test_rmul():
-    test_inter_df_math_right_ops("rmul")
-
-
 @pytest.mark.skip(reason="Defaulting to Pandas")
 def test_rolling():
     ray_df = create_test_dataframe()
@@ -2968,21 +3026,6 @@ def test_rolling():
 def test_round(ray_df, pandas_df):
     assert ray_df_equals_pandas(ray_df.round(), pandas_df.round())
     assert ray_df_equals_pandas(ray_df.round(1), pandas_df.round(1))
-
-
-def test_rpow():
-    test_inter_df_math_right_ops("rpow")
-
-
-def test_rsub():
-    test_inter_df_math_right_ops("rsub")
-
-
-@pytest.mark.skip(
-    reason="dtypes on different partitions may not match up, " "no fix for this yet"
-)
-def test_rtruediv():
-    test_inter_df_math_right_ops("rtruediv")
 
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
@@ -3161,14 +3204,6 @@ def test_std(ray_df, pandas_df):
     assert ray_df.std().equals(pandas_df.std())
 
 
-def test_sub():
-    test_inter_df_math("sub", simple=False)
-
-
-def test_subtract():
-    test_inter_df_math("subtract", simple=False)
-
-
 @pytest.mark.skip(reason="Defaulting to Pandas")
 def test_swapaxes():
     ray_df = create_test_dataframe()
@@ -3239,10 +3274,6 @@ def test_transform(ray_df, pandas_df):
         pandas_df.transform(lambda df: df.isna()),
     )
     assert ray_df_equals_pandas(ray_df.transform("isna"), pandas_df.transform("isna"))
-
-
-def test_truediv():
-    test_inter_df_math("truediv", simple=False)
 
 
 @pytest.mark.skip(reason="Defaulting to Pandas")
@@ -3528,10 +3559,6 @@ def test_iat():
         ray_df.iat()
 
 
-def test___rsub__():
-    test_inter_df_math_right_ops("__rsub__")
-
-
 def test___repr__():
     frame_data = np.random.randint(0, 100, size=(1000, 100))
     pandas_df = pandas.DataFrame(frame_data)
@@ -3615,10 +3642,6 @@ def test_is_copy():
 
     with pytest.raises(NotImplementedError):
         ray_df.is_copy
-
-
-def test___div__():
-    test_inter_df_math("__div__", simple=True)
 
 
 def test_at():
