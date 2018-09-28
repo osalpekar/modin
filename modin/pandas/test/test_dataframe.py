@@ -163,6 +163,14 @@ bool_arg = {
 bool_arg_keys = list(bool_arg.keys())
 bool_arg_values = list(bool_arg.values())
 
+bool_none_arg = {
+        "True": True,
+        "False": False,
+        "None": None
+        }
+bool_none_arg_keys = list(bool_none_arg.keys())
+bool_none_arg_values = list(bool_none_arg.values())
+
 # END parametrizations of common kwargs
 
 
@@ -483,7 +491,7 @@ def test_agg(request, ray_df, pandas_df, axis, func):
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 @pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
 @pytest.mark.parametrize("func", agg_func_values, ids=agg_func_keys)
-def test_aggregate(ray_df, pandas_df, func, axis):
+def test_aggregate(request, ray_df, pandas_df, func, axis):
     if (name_contains(request.node.name, ["over rows"]) or
             not name_contains(request.node.name, numeric_agg_funcs)):
         ray_result = ray_df.aggregate(func, axis)
@@ -502,15 +510,23 @@ def test_align(ray_df, pandas_df):
 
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
-def test_all(ray_df, pandas_df):
-    assert df_equals(pandas_df.all(), ray_df.all())
-    assert df_equals(pandas_df.all(axis=1), ray_df.all(axis=1))
+@pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
+@pytest.mark.parametrize("skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys))
+@pytest.mark.parametrize("bool_only", bool_none_arg_values, ids=arg_keys("bool_only", bool_none_arg_keys))
+def test_all(ray_df, pandas_df, axis, skipna, bool_only):
+    ray_result = ray_df.all(axis=axis, skipna=skipna, bool_only=bool_only)
+    pandas_result = pandas_df.all(axis=axis, skipna=skipna, bool_only=bool_only)
+    assert df_equals(ray_result, pandas_result)
 
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
-def test_any(ray_df, pandas_df):
-    assert df_equals(pandas_df.any(), ray_df.any())
-    assert df_equals(pandas_df.any(axis=1), ray_df.any(axis=1))
+@pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
+@pytest.mark.parametrize("skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys))
+@pytest.mark.parametrize("bool_only", bool_none_arg_values, ids=arg_keys("bool_only", bool_none_arg_keys))
+def test_any(ray_df, pandas_df, axis, skipna, bool_only):
+    ray_result = ray_df.any(axis=axis, skipna=skipna, bool_only=bool_only)
+    pandas_result = pandas_df.any(axis=axis, skipna=skipna, bool_only=bool_only)
+    assert df_equals(ray_result, pandas_result)
 
 
 def test_append():
@@ -538,7 +554,7 @@ def test_append():
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 @pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
 @pytest.mark.parametrize("func", agg_func_values, ids=agg_func_keys)
-def test_apply(ray_df, pandas_df, func, axis):
+def test_apply(request, ray_df, pandas_df, func, axis):
     if (name_contains(request.node.name, ["over rows"]) or
             not name_contains(request.node.name, numeric_agg_funcs)):
         ray_result = ray_df.apply(func, axis)
