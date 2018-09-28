@@ -17,7 +17,7 @@ from modin.pandas.utils import to_pandas
 from numpy.testing import assert_array_equal
 import sys
 
-from .utils import df_equals, df_is_empty
+from .utils import df_equals, df_is_empty, arg_keys
 
 # Force matplotlib to not use any Xwindows backend.
 matplotlib.use("Agg")
@@ -143,19 +143,12 @@ axis = {
 axis_keys = list(axis.keys())
 axis_values = list(axis.values())
 
-skipna = {
-        "skip NaN": True,
-        "don't skip NaN": False
+bool_arg = {
+        "True": True,
+        "False": False
         }
-skipna_keys = list(skipna.keys())
-skipna_values = list(skipna.values())
-
-numeric_only = {
-        "numeric only": True,
-        "not numeric only": False
-        }
-numeric_only_keys = list(numeric_only.keys())
-numeric_only_values = list(numeric_only.values())
+bool_arg_keys = list(bool_arg.keys())
+bool_arg_values = list(bool_arg.values())
 
 # END parametrizations of common kwargs
 
@@ -449,8 +442,12 @@ def test_get_dtype_counts(ray_df, pandas_df):
 
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
-def test_get_dummies(ray_df, pandas_df):
-    assert df_equals(pd.get_dummies(ray_df), pandas.get_dummies(pandas_df))
+@pytest.mark.parametrize("dummy_na", bool_arg_values, ids=arg_keys("dummy_na", bool_arg_keys))
+@pytest.mark.parametrize("drop_first", bool_arg_values, ids=arg_keys("drop_first", bool_arg_keys))
+def test_get_dummies(ray_df, pandas_df, dummy_na, drop_first):
+    result = pd.get_dummies(ray_df, dummy_na=dummy_na, drop_first=drop_first)
+    expected = pandas.get_dummies(pandas_df, dummy_na=dummy_na, drop_first=drop_first)
+    assert df_equals(result, expected)
 
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
@@ -1739,8 +1736,8 @@ def test_mask(ray_df, pandas_df):
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 @pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
-@pytest.mark.parametrize("skipna", skipna_values, ids=skipna_keys)
-@pytest.mark.parametrize("numeric_only", numeric_only_values, ids=numeric_only_keys)
+@pytest.mark.parametrize("skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys))
+@pytest.mark.parametrize("numeric_only", bool_arg_values, ids=arg_keys("numeric_only", bool_arg_keys))
 def test_max(ray_df, pandas_df, axis, skipna, numeric_only):
     kwargs = {
             "axis": axis,
@@ -1752,8 +1749,8 @@ def test_max(ray_df, pandas_df, axis, skipna, numeric_only):
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 @pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
-@pytest.mark.parametrize("skipna", skipna_values, ids=skipna_keys)
-@pytest.mark.parametrize("numeric_only", numeric_only_values, ids=numeric_only_keys)
+@pytest.mark.parametrize("skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys))
+@pytest.mark.parametrize("numeric_only", bool_arg_values, ids=arg_keys("numeric_only", bool_arg_keys))
 def test_mean(ray_df, pandas_df, axis, skipna, numeric_only):
     kwargs = {
             "axis": axis,
@@ -1765,8 +1762,8 @@ def test_mean(ray_df, pandas_df, axis, skipna, numeric_only):
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 @pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
-@pytest.mark.parametrize("skipna", skipna_values, ids=skipna_keys)
-@pytest.mark.parametrize("numeric_only", numeric_only_values, ids=numeric_only_keys)
+@pytest.mark.parametrize("skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys))
+@pytest.mark.parametrize("numeric_only", bool_arg_values, ids=arg_keys("numeric_only", bool_arg_keys))
 def test_median(ray_df, pandas_df, axis, skipna, numeric_only):
     kwargs = {
             "axis": axis,
