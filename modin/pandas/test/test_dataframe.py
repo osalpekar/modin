@@ -171,6 +171,16 @@ bool_none_arg = {
 bool_none_arg_keys = list(bool_none_arg.keys())
 bool_none_arg_values = list(bool_none_arg.values())
 
+int_arg = {
+        '-5': -5, 
+        '-1': -1, 
+        '0': 0, 
+        '1': 1, 
+        '5': 5
+        }
+int_arg_keys = list(int_arg.keys())
+int_arg_values = list(int_arg.values())
+
 # END parametrizations of common kwargs
 
 
@@ -892,7 +902,7 @@ def test_describe(ray_df, pandas_df):
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 @pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
-@pytest.mark.parametrize("periods", [-5, -1, 0, 1, 5], ids=["-5", "-1", "0", "1", "5"])
+@pytest.mark.parametrize("periods", int_arg_values, ids=arg_keys("periods", int_arg_keys))
 def test_diff(request,ray_df, pandas_df, axis, periods):
     if name_contains(request.node.name, numeric_dfs):
         ray_result = ray_df.diff(axis=axis, periods=periods)
@@ -1472,11 +1482,13 @@ def test_fillna_datetime_columns():
 """
 
 
-@pytest.fixture
-def test_filter(ray_df, pandas_df, by):
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
+def test_filter(ray_df, pandas_df):
+    by = {"items": ["col1", "col5"], "regex": "4$|3$", "like": "col"}
     assert df_equals(ray_df.filter(items=by["items"]), pandas_df.filter(items=by["items"]))
 
-    assert df_equals(ray_df.filter(regex=by["regex"]), pandas_df.filter(regex=by["regex"]))
+    assert df_equals(ray_df.filter(regex=by["regex"], axis=0), pandas_df.filter(regex=by["regex"], axis=0))
+    assert df_equals(ray_df.filter(regex=by["regex"], axis=1), pandas_df.filter(regex=by["regex"], axis=1))
 
     assert df_equals(ray_df.filter(like=by["like"]), pandas_df.filter(like=by["like"]))
 
@@ -1531,8 +1543,9 @@ def test_get_values(ray_df, pandas_df):
         ray_df.get_values()
 
 
-@pytest.fixture
-def test_head(ray_df, pandas_df, n=5):
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
+@pytest.mark.parametrize("n", int_arg_values, ids=arg_keys("n", int_arg_keys))
+def test_head(ray_df, pandas_df, n):
     assert df_equals(ray_df.head(n), pandas_df.head(n))
 
 
@@ -1551,13 +1564,21 @@ def test_iat(ray_df, pandas_df):
 
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
-def test_idxmax(ray_df, pandas_df):
-    assert df_equals(ray_df.idxmax(), pandas_df.idxmax())
+@pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
+@pytest.mark.parametrize("skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys))
+def test_idxmax(ray_df, pandas_df, axis, skipna):
+    ray_result = ray_df.all(axis=axis, skipna=skipna)
+    pandas_result = pandas_df.all(axis=axis, skipna=skipna)
+    assert df_equals(ray_result, pandas_result)
 
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
-def test_idxmin(ray_df, pandas_df):
-    assert df_equals(ray_df.idxmin(), pandas_df.idxmin())
+@pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
+@pytest.mark.parametrize("skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys))
+def test_idxmin(ray_df, pandas_df, axis, skipna):
+    ray_result = ray_df.all(axis=axis, skipna=skipna)
+    pandas_result = pandas_df.all(axis=axis, skipna=skipna)
+    assert df_equals(ray_result, pandas_result)
 
 
 @pytest.mark.skip(reason="Defaulting to Pandas")
@@ -1568,30 +1589,32 @@ def test_infer_objects(ray_df, pandas_df):
 
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
-def test_iloc(ray_df, pandas_df):
-    # Scaler
-    assert ray_df.iloc[0, 1] == pandas_df.iloc[0, 1]
+def test_iloc(request, ray_df, pandas_df):
+    if not name_contains(request.node.name, ["empty_data"]):
+        # Scaler
+        assert ray_df.iloc[0, 1] == pandas_df.iloc[0, 1]
 
-    # Series
-    assert df_equals(ray_df.iloc[0], pandas_df.iloc[0])
-    assert df_equals(ray_df.iloc[1:, 0], pandas_df.iloc[1:, 0])
-    assert df_equals(ray_df.iloc[1:2, 0], pandas_df.iloc[1:2, 0])
+        # Series
+        assert df_equals(ray_df.iloc[0], pandas_df.iloc[0])
+        assert df_equals(ray_df.iloc[1:, 0], pandas_df.iloc[1:, 0])
+        assert df_equals(ray_df.iloc[1:2, 0], pandas_df.iloc[1:2, 0])
 
-    # DataFrame
-    assert df_equals(ray_df.iloc[[1, 2]], pandas_df.iloc[[1, 2]])
-    # See issue #80
-    # assert df_equals(ray_df.iloc[[1, 2], [1, 0]], pandas_df.iloc[[1, 2], [1, 0]])
-    assert df_equals(ray_df.iloc[1:2, 0:2], pandas_df.iloc[1:2, 0:2])
+        # DataFrame
+        assert df_equals(ray_df.iloc[[1, 2]], pandas_df.iloc[[1, 2]])
+        # See issue #80
+        # assert df_equals(ray_df.iloc[[1, 2], [1, 0]], pandas_df.iloc[[1, 2], [1, 0]])
+        assert df_equals(ray_df.iloc[1:2, 0:2], pandas_df.iloc[1:2, 0:2])
 
-    # Issue #43
-    ray_df.iloc[0:3, :]
+        # Issue #43
+        ray_df.iloc[0:3, :]
 
-    # Write Item
-    ray_df_copy = ray_df.copy()
-    pandas_df_copy = pandas_df.copy()
-    ray_df_copy.iloc[[1, 2]] = 42
-    pandas_df_copy.iloc[[1, 2]] = 42
-    assert df_equals(ray_df_copy, pandas_df_copy)
+        # Write Item
+        ray_df.iloc[[1, 2]] = 42
+        pandas_df.iloc[[1, 2]] = 42
+        assert df_equals(ray_df, pandas_df)
+    else:
+        with pytest.raises(IndexError):
+            ray_df.iloc[0, 1]
 
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
@@ -1606,32 +1629,37 @@ def test_index(ray_df, pandas_df):
 
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
-def test_info(ray_df, pandas_df):
+def test_info(request, ray_df, pandas_df):
     # Test to make sure that it does not crash
     ray_df.info(memory_usage="deep")
 
-    with io.StringIO() as buf:
-        ray_df.info(buf=buf)
-        info_string = buf.getvalue()
-        assert "<class 'modin.pandas.dataframe.DataFrame'>\n" in info_string
-        assert "memory usage: " in info_string
-        assert "Data columns (total {} columns):".format(ray_df.shape[1]) in info_string
+    if not name_contains(request.node.name, ["empty_data"]):
+        with io.StringIO() as buf:
+            ray_df.info(buf=buf)
+            info_string = buf.getvalue()
+            assert "<class 'modin.pandas.dataframe.DataFrame'>\n" in info_string
+            assert "memory usage: " in info_string
+            assert "Data columns (total {} columns):".format(ray_df.shape[1]) in info_string
 
-    with io.StringIO() as buf:
-        ray_df.info(buf=buf, verbose=False, memory_usage=False)
-        info_string = buf.getvalue()
-        assert "memory usage: " not in info_string
-        assert "Columns: {0} entries, {1} to {2}".format(ray_df.shape[1], ray_df.columns[0], ray_df.columns[-1]) in info_string
+        with io.StringIO() as buf:
+            ray_df.info(buf=buf, verbose=False, memory_usage=False)
+            info_string = buf.getvalue()
+            assert "memory usage: " not in info_string
+            assert "Columns: {0} entries, {1} to {2}".format(ray_df.shape[1], ray_df.columns[0], ray_df.columns[-1]) in info_string
 
 
-@pytest.fixture
-def test_insert(ray_df, pandas_df, loc, column, value):
-    ray_df_cp = ray_df.copy()
-    pd_df_cp = pandas_df.copy()
-
-    ray_df_cp.insert(loc, column, value)
-    pd_df_cp.insert(loc, column, value)
-    assert df_equals(ray_df_cp, pd_df_cp)
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
+@pytest.mark.parametrize("loc", int_arg_values, ids=arg_keys("loc", int_arg_keys))
+def test_insert(ray_df, pandas_df, loc):
+    ray_df = ray_df.copy()
+    pandas_df = pandas_df.copy()
+    loc %= ray_df.shape[1] + 1
+    column = "New Column"
+    key = loc if loc < ray_df.shape[1] else loc-1
+    value = ray_df.iloc[:, key]
+    ray_df.insert(loc, column, value)
+    pandas_df.insert(loc, column, value)
+    assert df_equals(ray_df, pandas_df)
 
 
 @pytest.mark.skip(reason="Defaulting to Pandas")
@@ -1821,38 +1849,29 @@ def test_mask(ray_df, pandas_df):
 @pytest.mark.parametrize("skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys))
 @pytest.mark.parametrize("numeric_only", bool_arg_values, ids=arg_keys("numeric_only", bool_arg_keys))
 def test_max(ray_df, pandas_df, axis, skipna, numeric_only):
-    kwargs = {
-            "axis": axis,
-            "skipna": skipna,
-            "numeric_only": numeric_only
-            }
-    assert df_equals(ray_df.max(**kwargs), pandas_df.max(**kwargs))
+    ray_result = ray_df.max(axis=axis, skipna=skipna, numeric_only=numeric_only)
+    pandas_result = pandas_df.max(axis=axis, skipna=skipna, numeric_only=numeric_only)
+    assert df_equals(ray_result, pandas_result)
 
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 @pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
 @pytest.mark.parametrize("skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys))
-@pytest.mark.parametrize("numeric_only", bool_arg_values, ids=arg_keys("numeric_only", bool_arg_keys))
+@pytest.mark.parametrize("numeric_only", bool_none_arg_values, ids=arg_keys("numeric_only", bool_none_arg_keys))
 def test_mean(ray_df, pandas_df, axis, skipna, numeric_only):
-    kwargs = {
-            "axis": axis,
-            "skipna": skipna,
-            "numeric_only": numeric_only
-            }
-    assert df_equals(ray_df.mean(**kwargs), pandas_df.mean(**kwargs))
+    ray_result = ray_df.mean(axis=axis, skipna=skipna, numeric_only=numeric_only)
+    pandas_result = pandas_df.mean(axis=axis, skipna=skipna, numeric_only=numeric_only)
+    assert df_equals(ray_result, pandas_result)
 
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 @pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
 @pytest.mark.parametrize("skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys))
-@pytest.mark.parametrize("numeric_only", bool_arg_values, ids=arg_keys("numeric_only", bool_arg_keys))
+@pytest.mark.parametrize("numeric_only", bool_none_arg_values, ids=arg_keys("numeric_only", bool_none_arg_keys))
 def test_median(ray_df, pandas_df, axis, skipna, numeric_only):
-    kwargs = {
-            "axis": axis,
-            "skipna": skipna,
-            "numeric_only": numeric_only
-            }
-    assert df_equals(ray_df.median(**kwargs), pandas_df.median(**kwargs))
+    ray_result = ray_df.median(axis=axis, skipna=skipna, numeric_only=numeric_only)
+    pandas_result = pandas_df.median(axis=axis, skipna=skipna, numeric_only=numeric_only)
+    assert df_equals(ray_result, pandas_result)
 
 @pytest.mark.skip(reason="Defaulting to Pandas")
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
@@ -1931,15 +1950,23 @@ def test_merge():
 
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
-def test_min(ray_df, pandas_df):
-    assert df_equals(ray_df.min(), pandas_df.min())
-    assert df_equals(ray_df.min(axis=1), pandas_df.min(axis=1))
+@pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
+@pytest.mark.parametrize("skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys))
+@pytest.mark.parametrize("numeric_only", bool_none_arg_values, ids=arg_keys("numeric_only", bool_none_arg_keys))
+def test_min(ray_df, pandas_df, axis, skipna, numeric_only):
+    ray_result = ray_df.min(axis=axis, skipna=skipna, numeric_only=numeric_only)
+    pandas_result = pandas_df.min(axis=axis, skipna=skipna, numeric_only=numeric_only)
+    assert df_equals(ray_result, pandas_result)
 
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
-def test_mode(ray_df, pandas_df):
-    assert df_equals(ray_df.mode(), pandas_df.mode())
-    assert df_equals(ray_df.mode(axis=1), pandas_df.mode(axis=1))
+@pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
+@pytest.mark.parametrize("skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys))
+@pytest.mark.parametrize("numeric_only", bool_arg_values, ids=arg_keys("numeric_only", bool_arg_keys))
+def test_mode(ray_df, pandas_df, axis, skipna, numeric_only):
+    ray_result = ray_df.mode(axis=axis, skipna=skipna, numeric_only=numeric_only)
+    pandas_result = pandas_df.mode(axis=axis, skipna=skipna, numeric_only=numeric_only)
+    assert df_equals(ray_result, pandas_result)
 
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
@@ -1972,9 +1999,12 @@ def test_nsmallest(ray_df, pandas_df):
 
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
-def test_nunique(ray_df, pandas_df):
-    assert df_equals(ray_df.nunique(), pandas_df.nunique())
-    assert df_equals(ray_df.nunique(axis=1), pandas_df.nunique(axis=1))
+@pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
+@pytest.mark.parametrize("dropna", bool_arg_values, ids=arg_keys("dropna", bool_arg_keys))
+def test_nunique(ray_df, pandas_df, axis, dropna):
+    ray_result = ray_df.nunique(axis=axis, dropna=dropna)
+    pandas_result = pandas_df.nunique(axis=axis, dropna=dropna)
+    assert df_equals(ray_result, pandas_result)
 
 
 @pytest.mark.skip(reason="Defaulting to Pandas")
@@ -2042,13 +2072,33 @@ def test_pop(ray_df, pandas_df):
 
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
-def test_prod(ray_df, pandas_df):
-    assert df_equals(ray_df.prod(), pandas_df.prod())
+@pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
+@pytest.mark.parametrize("skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys))
+@pytest.mark.parametrize("numeric_only", bool_arg_values, ids=arg_keys("numeric_only", bool_arg_keys))
+@pytest.mark.parametrize("min_count", int_arg_values, ids=arg_keys("min_count", int_arg_keys))
+def test_prod(request, ray_df, pandas_df, axis, skipna, numeric_only, min_count):
+    if numeric_only or name_contains(request.node.name, numeric_dfs):
+        ray_result = ray_df.prod(axis=axis, skipna=skipna, numeric_only=numeric_only, min_count=min_count)
+        pandas_result = pandas_df.prod(axis=axis, skipna=skipna, numeric_only=numeric_only, min_count=min_count)
+        assert df_equals(ray_result, pandas_result)
+    else:
+        with pytest.raises(TypeError):
+            ray_df.prod(axis=axis, skipna=skipna, numeric_only=numeric_only, min_count=min_count)
 
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
-def test_product(ray_df, pandas_df):
-    assert df_equals(ray_df.product(), pandas_df.product())
+@pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
+@pytest.mark.parametrize("skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys))
+@pytest.mark.parametrize("numeric_only", bool_arg_values, ids=arg_keys("numeric_only", bool_arg_keys))
+@pytest.mark.parametrize("min_count", int_arg_values, ids=arg_keys("min_count", int_arg_keys))
+def test_product(request, ray_df, pandas_df, axis, skipna, numeric_only, min_count):
+    if numeric_only or name_contains(request.node.name, numeric_dfs):
+        ray_result = ray_df.product(axis=axis, skipna=skipna, numeric_only=numeric_only, min_count=min_count)
+        pandas_result = pandas_df.product(axis=axis, skipna=skipna, numeric_only=numeric_only, min_count=min_count)
+        assert df_equals(ray_result, pandas_result)
+    else:
+        with pytest.raises(TypeError):
+            ray_df.product(axis=axis, skipna=skipna, numeric_only=numeric_only, min_count=min_count)
 
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
@@ -2060,7 +2110,7 @@ def test_quantile(ray_df, pandas_df, q):
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 @pytest.mark.parametrize("funcs", query_func_values, ids=query_func_keys)
 def test_query(ray_df, pandas_df, funcs):
-    pandas_df_new, ray_df_new = pandas_df.query(f), ray_df.query(f)
+    pandas_df_new, ray_df_new = pandas_df.query(funcs), ray_df.query(funcs)
     assert df_equals(pandas_df_new, to_pandas(ray_df_new))
 
 
