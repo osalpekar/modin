@@ -119,6 +119,17 @@ quantiles = {
 quantiles_keys = list(quantiles.keys())
 quantiles_values = list(quantiles.values())
 
+# Test indices for get, set_index, __contains__, insert
+indices = {
+        "col1": "col1",
+        "col2": "col2",
+        "A": "A",
+        "B": "B",
+        "does not exist": "does not exist"
+        }
+indices_keys = list(indices.keys())
+indices_values = list(indices.values())
+
 # END Test input data and functions
 
 
@@ -423,7 +434,8 @@ def test_ftypes(ray_df, pandas_df):
     assert df_equals(ray_df.ftypes, pandas_df.ftypes)
 
 
-@pytest.fixture
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
+@pytest.mark.parametrize("key", indices_values, ids=indices_keys)
 def test_get(ray_df, pandas_df, key):
     assert df_equals(ray_df.get(key), pandas_df.get(key))
     assert df_equals(ray_df.get(key, default="default"),
