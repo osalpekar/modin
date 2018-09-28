@@ -23,6 +23,7 @@ else:
     PY2 = False
 
 
+# Input data and functions for the tests
 # The test data that we will test our code against
 test_data = {
     "empty_data": {},
@@ -87,6 +88,8 @@ test_funcs = {
 test_func_keys = list(test_dfs.keys())
 test_func_values = list(test_dfs.values())
 
+# END Test input data and functions
+
 
 def ray_df_equals_pandas(ray_df, pandas_df):
     return to_pandas(ray_df).equals(pandas_df)
@@ -103,38 +106,6 @@ def ray_df_equals(ray_df1, ray_df2):
 def ray_df_is_empty(df):
     assert df.size == 0 and df.empty
     assert df.shape[0] == 0 or df.shape[1] == 0
-
-
-def test_empty_df():
-    df = pd.DataFrame(index=["a", "b"])
-    test_is_empty(df)
-    tm.assert_index_equal(df.index, pd.Index(["a", "b"]))
-    assert len(df.columns) == 0
-
-    df = pd.DataFrame(columns=["a", "b"])
-    test_is_empty(df)
-    assert len(df.index) == 0
-    tm.assert_index_equal(df.columns, pd.Index(["a", "b"]))
-
-    df = pd.DataFrame()
-    test_is_empty(df)
-    assert len(df.index) == 0
-    assert len(df.columns) == 0
-
-    df = pd.DataFrame(index=["a", "b"])
-    test_is_empty(df)
-    tm.assert_index_equal(df.index, pd.Index(["a", "b"]))
-    assert len(df.columns) == 0
-
-    df = pd.DataFrame(columns=["a", "b"])
-    test_is_empty(df)
-    assert len(df.index) == 0
-    tm.assert_index_equal(df.columns, pd.Index(["a", "b"]))
-
-    df = pd.DataFrame()
-    test_is_empty(df)
-    assert len(df.index) == 0
-    assert len(df.columns) == 0
 
 
 @pytest.fixture
@@ -1638,6 +1609,38 @@ def test_duplicated():
 
     with pytest.raises(NotImplementedError):
         ray_df.duplicated()
+
+
+def test_empty_df():
+    df = pd.DataFrame(index=["a", "b"])
+    test_is_empty(df)
+    tm.assert_index_equal(df.index, pd.Index(["a", "b"]))
+    assert len(df.columns) == 0
+
+    df = pd.DataFrame(columns=["a", "b"])
+    test_is_empty(df)
+    assert len(df.index) == 0
+    tm.assert_index_equal(df.columns, pd.Index(["a", "b"]))
+
+    df = pd.DataFrame()
+    test_is_empty(df)
+    assert len(df.index) == 0
+    assert len(df.columns) == 0
+
+    df = pd.DataFrame(index=["a", "b"])
+    test_is_empty(df)
+    tm.assert_index_equal(df.index, pd.Index(["a", "b"]))
+    assert len(df.columns) == 0
+
+    df = pd.DataFrame(columns=["a", "b"])
+    test_is_empty(df)
+    assert len(df.index) == 0
+    tm.assert_index_equal(df.columns, pd.Index(["a", "b"]))
+
+    df = pd.DataFrame()
+    test_is_empty(df)
+    assert len(df.index) == 0
+    assert len(df.columns) == 0
 
 
 def test_eq():
