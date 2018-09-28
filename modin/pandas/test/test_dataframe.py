@@ -567,6 +567,22 @@ def test_apply(request, ray_df, pandas_df, func, axis):
 
 @pytest.mark.skip(reason="Defaulting to Pandas")
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
+def test_apply_special(request, ray_df, pandas_df):
+    if (name_contains(request.node.name, numeric_dfs)):
+        ray_result = ray_df.apply(lambda df: -df, axis=0)
+        pandas_result = pandas_df.apply(lambda df: -df, axis=0)
+        assert df_equals(ray_result, pandas_result)
+        ray_result = ray_df.apply(lambda df: -df, axis=1)
+        pandas_result = pandas_df.apply(lambda df: -df, axis=1)
+        assert df_equals(ray_result, pandas_result)
+    else:
+        ray_result = ray_df.apply(lambda df: df.drop("col1"), axis=1)
+        pandas_result = pandas_df.apply(lambda df: df.drop("col1"), axis=1)
+        assert df_equals(ray_result, pandas_result)
+
+
+
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_as_blocks(ray_df, pandas_df):
     with pytest.raises(NotImplementedError):
         ray_df.as_blocks()
