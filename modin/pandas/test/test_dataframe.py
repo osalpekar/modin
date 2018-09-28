@@ -82,6 +82,8 @@ test_dfs = {name: [pd.DataFrame(data), pandas.DataFrame(data)] for name, data in
 test_dfs_keys = list(test_dfs.keys())
 test_dfs_values = list(test_dfs.values())
 
+numeric_dfs = ["empty_data", "int_data", "float_data", "sparse_nan_data", "dense_nan_data"]
+
 # Test functionss for applymap
 test_func = {
         "plus one": lambda x: x + 1, 
@@ -92,6 +94,8 @@ test_func = {
         }
 test_func_keys = list(test_func.keys())
 test_func_values = list(test_func.values())
+
+numeric_test_funcs = ["plus one", "square"]
 
 # Test functions for query
 query_func = { 
@@ -159,7 +163,8 @@ def create_test_dataframe():
 
 
 # Test inter df math functions
-def inter_df_math_helper(op, simple=False):
+@pytest.fixture
+def inter_df_math_helper(op):
     frame_data = {
         "col1": [0, 1, 2, 3],
         "col2": [4, 5, 6, 7],
@@ -182,61 +187,60 @@ def inter_df_math_helper(op, simple=False):
 
     list_test = [0, 1, 2, 4]
 
-    if not simple:
-        assert df_equals(getattr(ray_df, op)(list_test, axis=1), getattr(pandas_df, op)(list_test, axis=1))
+    assert df_equals(getattr(ray_df, op)(list_test, axis=1), getattr(pandas_df, op)(list_test, axis=1))
 
-        assert df_equals(
-            getattr(ray_df, op)(list_test, axis=0),
-            getattr(pandas_df, op)(list_test, axis=0),
-        )
+    assert df_equals(
+        getattr(ray_df, op)(list_test, axis=0),
+        getattr(pandas_df, op)(list_test, axis=0),
+    )
 
 
 def test_add():
-    inter_df_math_helper("add", simple=False)
+    inter_df_math_helper("add")
 
 
 def test_div():
-    inter_df_math_helper("div", simple=False)
+    inter_df_math_helper("div")
 
 
 def test_divide():
-    inter_df_math_helper("divide", simple=False)
+    inter_df_math_helper("divide")
 
 
 def test_floordiv():
-    inter_df_math_helper("floordiv", simple=False)
+    inter_df_math_helper("floordiv")
 
 
 def test_mod():
-    inter_df_math_helper("mod", simple=False)
+    inter_df_math_helper("mod")
 
 
 def test_mul():
-    inter_df_math_helper("mul", simple=False)
+    inter_df_math_helper("mul")
 
 
 def test_multiply():
-    inter_df_math_helper("multiply", simple=False)
+    inter_df_math_helper("multiply")
 
 
 def test_pow():
-    inter_df_math_helper("pow", simple=False)
+    inter_df_math_helper("pow")
 
 
 def test_sub():
-    inter_df_math_helper("sub", simple=False)
+    inter_df_math_helper("sub")
 
 
 def test_subtract():
-    inter_df_math_helper("subtract", simple=False)
+    inter_df_math_helper("subtract")
 
 
 def test_truediv():
-    inter_df_math_helper("truediv", simple=False)
+    inter_df_math_helper("truediv")
 
 
 def test___div__():
-    inter_df_math_helper("__div__", simple=True)
+    inter_df_math_helper("__div__")
 
 # END test inter df math functions
 
@@ -318,16 +322,10 @@ def test_rdiv():
     inter_df_math_right_ops_helper("rdiv")
 
 
-@pytest.mark.skip(
-    reason="dtypes on different partitions may not match up, " "no fix for this yet"
-)
 def test_rfloordiv():
     inter_df_math_right_ops_helper("rfloordiv")
 
 
-@pytest.mark.skip(
-    reason="dtypes on different partitions may not match up, " "no fix for this yet"
-)
 def test_rmod():
     inter_df_math_right_ops_helper("rmod")
 
@@ -344,9 +342,6 @@ def test_rsub():
     inter_df_math_right_ops_helper("rsub")
 
 
-@pytest.mark.skip(
-    reason="dtypes on different partitions may not match up, " "no fix for this yet"
-)
 def test_rtruediv():
     inter_df_math_right_ops_helper("rtruediv")
 
@@ -357,8 +352,12 @@ def test___rsub__():
 
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
-def test_abs(ray_df, pandas_df):
-    assert df_equals(ray_df.abs(), pandas_df.abs())
+def test_abs(request, ray_df, pandas_df):
+    if any([df_name in request.node.name for df_name in numeric_dfs]):
+        assert df_equals(ray_df.abs(), pandas_df.abs())
+    else:
+        with pytest.raises(TypeError):
+            ray_df.abs()
 
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
@@ -371,11 +370,16 @@ def test_add_prefix(ray_df, pandas_df):
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 @pytest.mark.parametrize("testfunc", test_func_values, ids=test_func_keys)
-def test_applymap(ray_df, pandas_df, testfunc):
-    new_ray_df = ray_df.applymap(testfunc)
-    new_pandas_df = pandas_df.applymap(testfunc)
+def test_applymap(request, ray_df, pandas_df, testfunc):
+    if (any([func_name not in request.node.name for func_name in numeric_test_funcs]) or 
+            any([df_name in request.node.name for df_name in numeric_dfs])):
+        new_ray_df = ray_df.applymap(testfunc)
+        new_pandas_df = pandas_df.applymap(testfunc)
 
-    assert df_equals(new_ray_df, new_pandas_df)
+        assert df_equals(new_ray_df, new_pandas_df)
+    else:
+        with pytest.raises(TypeError):
+            ray_df.applymap(testfunc)
 
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
@@ -406,9 +410,7 @@ def test_copy(ray_df, pandas_df):
     new_ray_df = ray_df.copy()
 
     assert new_ray_df is not ray_df
-    assert np.array_equal(
-        new_ray_df._data_manager.data.partitions, ray_df._data_manager.data.partitions
-    )
+    assert df_equals(ray_df, new_ray_df)
 
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
