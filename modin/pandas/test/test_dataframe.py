@@ -56,6 +56,7 @@ test_data = {
         "col1": [np.nan, 2, np.nan, 0],
         "col2": [3, 4, np.nan, 1],
         "col3": [np.nan, np.nan, np.nan, 5],
+        "col3": [6, np.nan, np.nan, 10],
         },
     "int_float_object_data": { 
         "col1": [1, 2, 3, 4], 
@@ -2109,15 +2110,24 @@ def test_quantile(ray_df, pandas_df, q):
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 @pytest.mark.parametrize("funcs", query_func_values, ids=query_func_keys)
-def test_query(ray_df, pandas_df, funcs):
-    pandas_df_new, ray_df_new = pandas_df.query(funcs), ray_df.query(funcs)
-    assert df_equals(pandas_df_new, to_pandas(ray_df_new))
+def test_query(request, ray_df, pandas_df, funcs):
+    if name_contains(request.node.name, numeric_dfs) and "empty_data" not in request.node.name:
+        ray_result = ray_df.query(funcs)
+        pandas_result = pandas_df.query(funcs)
+        assert(ray_result, pandas_result)
 
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
-def test_rank(ray_df, pandas_df):
-    assert df_equals(ray_df.rank(), pandas_df.rank())
-    assert df_equals(ray_df.rank(axis=1), pandas_df.rank(axis=1))
+@pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
+@pytest.mark.parametrize("method", ['average', 'min', 'max', 'first', 'dense'], ids=['average', 'min', 'max', 'first', 'dense'])
+@pytest.mark.parametrize("numeric_only", bool_none_arg_values, ids=arg_keys("numeric_only", bool_none_arg_keys))
+@pytest.mark.parametrize("na_option", ['keep', 'top', 'bottom'], ids=['keep', 'top', 'bottom'])
+@pytest.mark.parametrize("ascending", bool_arg_values, ids=arg_keys("ascending", bool_arg_keys))
+@pytest.mark.parametrize("pct", bool_arg_values, ids=arg_keys("pct", bool_arg_keys))
+def test_rank(ray_df, pandas_df, axis, method, numeric_only, na_option, ascending, pct):
+    ray_result = ray_df.rank(axis=axis, method=method, numeric_only=numeric_only, na_option=na_option, ascending=ascending, pct=pct)
+    pandas_result = pandas_df.rank(axis=axis, method=method, numeric_only=numeric_only, na_option=na_option, ascending=ascending, pct=pct)
+    assert(ray_result, pandas_result)
 
 
 def test_reindex():
