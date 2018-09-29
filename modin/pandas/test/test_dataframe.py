@@ -2523,20 +2523,20 @@ def test_slice_shift(ray_df, pandas_df):
         ray_df.slice_shift()
 
 
-def test_sort_index():
-    frame_data = np.random.randint(0, 100, size=(1000, 100))
-    pandas_df = pandas.DataFrame(frame_data)
-    ray_df = pd.DataFrame(frame_data)
-
-    pandas_result = pandas_df
-    ray_result = ray_df
-
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
+@pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
+@pytest.mark.parametrize("ascending", bool_arg_values, ids=arg_keys("ascending", bool_arg_keys))
+@pytest.mark.parametrize("na_position", ["first", "last"], ids=["first", "last"])
+@pytest.mark.parametrize("sort_remaining", bool_arg_values, ids=arg_keys("sort_remaining", bool_arg_keys))
+def test_sort_index(ray_df, pandas_df, axis, ascending, na_position, sort_remaining):
+    ray_result = ray_df.sort_index(axis=axis, ascending=ascending, na_position=na_position, inplace=False)
+    pandas_result = pandas_df.sort_index(axis=axis, ascending=ascending, na_position=na_position, inplace=False)
     assert df_equals(ray_result, pandas_result)
 
-    pandas_result = pandas_df.sort_index(ascending=False)
-    ray_result = ray_df.sort_index(ascending=False)
-
-    assert df_equals(ray_result, pandas_result)
+    ray_df_copy = ray_df.copy()
+    ray_df.sort_index(axis=axis, ascending=ascending, na_position=na_position, inplace=True)
+    pandas_df.sort_index(axis=axis, ascending=ascending, na_position=na_position, inplace=True)
+    assert df_equals(ray_df, pandas_df)
 
 
 def test_sort_values():
