@@ -2798,28 +2798,32 @@ def test__doc__():
 
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
-def test___getitem__(ray_df, pandas_df):
-    ray_col = ray_df.__getitem__("col1")
-    assert isinstance(ray_col, pandas.Series)
+def test___getitem__(request, ray_df, pandas_df):
+    if "empty_data" not in request.node.name:
+        key = ray_df.columns[0]
+        ray_col = ray_df.__getitem__(key)
+        assert isinstance(ray_col, pandas.Series)
 
-    pd_col = pandas_df["col1"]
-    assert df_equals(pd_col, ray_col)
+        pd_col = pandas_df[key]
+        assert df_equals(pd_col, ray_col)
 
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
-def test___getattr__(ray_df, pandas_df):
-    col = df.__getattr__("col1")
-    assert isinstance(col, pandas.Series)
+def test___getattr__(request, ray_df, pandas_df):
+    if "empty_data" not in request.node.name:
+        key = ray_df.columns[0]
+        col = ray_df.__getattr__(key)
+        assert isinstance(col, pandas.Series)
 
-    col = getattr(df, "col1")
-    assert isinstance(col, pandas.Series)
+        col = getattr(ray_df, key)
+        assert isinstance(col, pandas.Series)
 
-    col = df.col1
-    assert isinstance(col, pandas.Series)
+        col = ray_df.col1
+        assert isinstance(col, pandas.Series)
 
-    # Check that lookup in column doesn't override other attributes
-    df2 = df.rename(index=str, columns={"col1": "columns"})
-    assert isinstance(df2.columns, pandas.Index)
+        # Check that lookup in column doesn't override other attributes
+        df2 = ray_df.rename(index=str, columns={key: "columns"})
+        assert isinstance(df2.columns, pandas.Index)
 
 
 @pytest.mark.skip(reason="Defaulting to Pandas")
@@ -2873,10 +2877,18 @@ def test___iter__(ray_df, pandas_df):
     assert list(ray_iterator) == list(pd_iterator)
 
 
-@pytest.fixture
-def test___contains__(ray_df, key, result):
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
+def test___contains__(request, ray_df, pandas_df):
+    result = False
+    key = "Not Exist"
     assert result == ray_df.__contains__(key)
     assert result == (key in ray_df)
+
+    if "empty_data" not in request.node.name:
+        result = True
+        key = pandas_df.columns[0]
+        assert result == ray_df.__contains__(key)
+        assert result == (key in ray_df)
 
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
@@ -2924,18 +2936,21 @@ def test___setstate__(ray_df, pandas_df):
 
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
-def test___delitem__(ray_df, pandas_df):
-    ray_df = ray_df.copy()
-    pandas_df = pandas_df.copy()
-    ray_df.__delitem__("col1")
-    pandas_df.__delitem__("col1")
-    assert df_equals(ray_df, pandas_df)
+def test___delitem__(request, ray_df, pandas_df):
+    if "empty_data" not in request.node.name:
+        key = pandas_df.columns[0]
 
-    # Issue 2027
-    last_label = pandas_df.iloc[:, -1].name
-    ray_df.__delitem__(last_label)
-    pandas_df.__delitem__(last_label)
-    df_equals(ray_df, pandas_df)
+        ray_df = ray_df.copy()
+        pandas_df = pandas_df.copy()
+        ray_df.__delitem__(key)
+        pandas_df.__delitem__(key)
+        assert df_equals(ray_df, pandas_df)
+
+        # Issue 2027
+        last_label = pandas_df.iloc[:, -1].name
+        ray_df.__delitem__(last_label)
+        pandas_df.__delitem__(last_label)
+        df_equals(ray_df, pandas_df)
 
 
 @pytest.mark.skip(reason="Defaulting to Pandas")
