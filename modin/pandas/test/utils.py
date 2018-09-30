@@ -20,7 +20,7 @@ def df_equals(df1, df2):
         df2 = to_pandas(df2)
     
     if isinstance(df1, types_for_equals) and isinstance(df2, types_for_equals):
-        return df1.equals(df2)
+        return df1.equals(df2) or (df1 - df2 < 10 ** -2).all()
     else:
         return df1 == df2
 

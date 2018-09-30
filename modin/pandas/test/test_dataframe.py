@@ -573,9 +573,10 @@ def test_apply_special(request, ray_df, pandas_df):
         ray_result = ray_df.apply(lambda df: -df, axis=1)
         pandas_result = pandas_df.apply(lambda df: -df, axis=1)
         assert df_equals(ray_result, pandas_result)
-    else:
-        ray_result = ray_df.apply(lambda df: df.drop("col1"), axis=1)
-        pandas_result = pandas_df.apply(lambda df: df.drop("col1"), axis=1)
+    elif "empty_data" not in request.node.name:
+        key = ray_df.columns[0]
+        ray_result = ray_df.apply(lambda df: df.drop(key), axis=1)
+        pandas_result = pandas_df.apply(lambda df: df.drop(key), axis=1)
         assert df_equals(ray_result, pandas_result)
 
 
@@ -1375,7 +1376,7 @@ def test_fillna_skip_certain_blocks(ray_df, pandas_df):
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_fillna_dict_series(request, ray_df, pandas_df):
     # Only test if nonempty data because no column names for empty dataframe
-    if request.node.name != "test_fillna_dict_series[empty_data]":
+    if "empty_data" not in request.node.name:
         #if request.node.name != 
         col1 = ray_df.columns[0]
         col2 = ray_df.columns[-1]
@@ -2539,30 +2540,35 @@ def test_sort_index(ray_df, pandas_df, axis, ascending, na_position, sort_remain
     assert df_equals(ray_df, pandas_df)
 
 
-def test_sort_values():
-    frame_data = np.random.randint(0, 100, size=(1000, 100))
-    pandas_df = pandas.DataFrame(frame_data)
-    ray_df = pd.DataFrame(frame_data)
+@pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
+@pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
+@pytest.mark.parametrize("ascending", bool_arg_values, ids=arg_keys("ascending", bool_arg_keys))
+@pytest.mark.parametrize("na_position", ["first", "last"], ids=["first", "last"])
+def test_sort_values(request, ray_df, pandas_df, axis, ascending, na_position):
+    if "empty_data" not in request.node.name and ((axis == 0 or axis == 'over rows') or name_contains(request.node.name, numeric_dfs)):
+        index = ray_df.index if axis or axis == "columns" else ray_df.columns
+        key = index[0]
+        ray_result = ray_df.sort_values(key, axis=axis, ascending=ascending, na_position=na_position, inplace=False)
+        pandas_result = pandas_df.sort_values(key, axis=axis, ascending=ascending, na_position=na_position, inplace=False)
+        assert df_equals(ray_result, pandas_result)
 
-    pandas_result = pandas_df.sort_values(by=1)
-    ray_result = ray_df.sort_values(by=1)
+        ray_df_cp = ray_df.copy()
+        pandas_df_cp = pandas_df.copy()
+        ray_df_cp.sort_values(key, axis=axis, ascending=ascending, na_position=na_position, inplace=True)
+        pandas_df_cp.sort_values(key, axis=axis, ascending=ascending, na_position=na_position, inplace=True)
+        assert df_equals(ray_df_cp, pandas_df_cp)
 
-    assert df_equals(ray_result, pandas_result)
+        keys = [key, index[-1]]
+        ray_result = ray_df.sort_values(keys, axis=axis, ascending=ascending, na_position=na_position, inplace=False)
+        pandas_result = pandas_df.sort_values(keys, axis=axis, ascending=ascending, na_position=na_position, inplace=False)
+        assert df_equals(ray_result, pandas_result)
 
-    pandas_result = pandas_df.sort_values(by=1, axis=1)
-    ray_result = ray_df.sort_values(by=1, axis=1)
+        ray_df_cp = ray_df.copy()
+        pandas_df_cp = pandas_df.copy()
+        ray_df_cp.sort_values(keys, axis=axis, ascending=ascending, na_position=na_position, inplace=True)
+        pandas_df_cp.sort_values(keys, axis=axis, ascending=ascending, na_position=na_position, inplace=True)
+        assert df_equals(ray_df_cp, pandas_df_cp)
 
-    assert df_equals(ray_result, pandas_result)
-
-    pandas_result = pandas_df.sort_values(by=[1, 3])
-    ray_result = ray_df.sort_values(by=[1, 3])
-
-    assert df_equals(ray_result, pandas_result)
-
-    pandas_result = pandas_df.sort_values(by=[1, 67], axis=1)
-    ray_result = ray_df.sort_values(by=[1, 67], axis=1)
-
-    assert df_equals(ray_result, pandas_result)
 
 
 @pytest.mark.skip(reason="Defaulting to Pandas")
@@ -2618,8 +2624,9 @@ def test_swaplevel(ray_df, pandas_df):
 
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
-def test_tail(ray_df, pandas_df):
-    assert df_equals(ray_df.tail(), pandas_df.tail())
+@pytest.mark.parametrize("n", int_arg_values, ids=arg_keys("n", int_arg_keys))
+def test_tail(ray_df, pandas_df, n):
+    assert df_equals(ray_df.tail(n), pandas_df.tail(n))
 
 
 @pytest.mark.skip(reason="Defaulting to Pandas")
@@ -2669,9 +2676,12 @@ def test_to_xarray(ray_df, pandas_df):
 
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
-def test_transform(ray_df, pandas_df):
-    assert df_equals(ray_df.transform(lambda df: df.isna()), pandas_df.transform(lambda df: df.isna()))
-    assert df_equals(ray_df.transform("isna"), pandas_df.transform("isna"))
+@pytest.mark.parametrize("func", agg_func_values, ids=agg_func_keys)
+def test_transform(request, ray_df, pandas_df, func):
+    if "empty_data" not in request.node.name:
+        ray_result = ray_df.agg(func)
+        pandas_result = pandas_df.agg(func)
+        assert df_equals(ray_result, pandas_result)
 
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
@@ -2734,12 +2744,14 @@ def test_values(ray_df, pandas_df):
 
 
 @pytest.mark.parametrize("ray_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
-def test_var(ray_df, pandas_df):
-    # Because of some differences in floating point arithmetic, we need to check that
-    # they are almost equal if they are not identically equal.
-    assert (ray_df.var() == pandas_df.var()).all() or (
-        (ray_df.var() - pandas_df.var()).abs() < 10 ** -10
-    ).all()
+@pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
+@pytest.mark.parametrize("skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys))
+@pytest.mark.parametrize("numeric_only", bool_none_arg_values, ids=arg_keys("numeric_only", bool_none_arg_keys))
+@pytest.mark.parametrize("ddof", int_arg_values, ids=arg_keys("ddof", int_arg_keys))
+def test_var(ray_df, pandas_df, axis, skipna, numeric_only, ddof):
+    ray_result = ray_df.var(axis=axis, skipna=skipna, numeric_only=numeric_only, ddof=ddof)
+    pandas_result = pandas_df.var(axis=axis, skipna=skipna, numeric_only=numeric_only, ddof=ddof)
+    assert df_equals(ray_result, pandas_result)
 
 
 def test_where():
