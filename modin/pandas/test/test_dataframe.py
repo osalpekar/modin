@@ -14,12 +14,34 @@ from modin.pandas.utils import to_pandas
 from numpy.testing import assert_array_equal
 import sys
 
-from .utils import (df_equals, df_is_empty, arg_keys, name_contains, test_dfs_keys, 
-        test_dfs_values, numeric_dfs, test_func_keys, test_func_values, 
-        query_func_keys, query_func_values, agg_func_keys, agg_func_values, 
-        numeric_agg_funcs, quantiles_keys, quantiles_values, indices_keys, 
-        indices_values, axis_keys, axis_values, bool_arg_keys, bool_arg_values,
-        bool_none_arg_keys, bool_none_arg_values, int_arg_keys, int_arg_values)
+from .utils import (
+    df_equals,
+    df_is_empty,
+    arg_keys,
+    name_contains,
+    test_dfs_keys,
+    test_dfs_values,
+    numeric_dfs,
+    test_func_keys,
+    test_func_values,
+    query_func_keys,
+    query_func_values,
+    agg_func_keys,
+    agg_func_values,
+    numeric_agg_funcs,
+    quantiles_keys,
+    quantiles_values,
+    indices_keys,
+    indices_values,
+    axis_keys,
+    axis_values,
+    bool_arg_keys,
+    bool_arg_values,
+    bool_none_arg_keys,
+    bool_none_arg_values,
+    int_arg_keys,
+    int_arg_values,
+)
 
 # Force matplotlib to not use any Xwindows backend.
 matplotlib.use("Agg")
@@ -44,11 +66,16 @@ def inter_df_math_helper(op):
     modin_df2 = pd.DataFrame(frame_data)
     pandas_df2 = pandas.DataFrame(frame_data)
 
-    assert df_equals(getattr(modin_df, op)(modin_df2), getattr(pandas_df, op)(pandas_df2))
+    assert df_equals(
+        getattr(modin_df, op)(modin_df2), getattr(pandas_df, op)(pandas_df2)
+    )
 
     list_test = [0, 1, 2, 4]
 
-    assert df_equals(getattr(modin_df, op)(list_test, axis=1), getattr(pandas_df, op)(list_test, axis=1))
+    assert df_equals(
+        getattr(modin_df, op)(list_test, axis=1),
+        getattr(pandas_df, op)(list_test, axis=1),
+    )
 
     assert df_equals(
         getattr(modin_df, op)(list_test, axis=0),
@@ -103,6 +130,7 @@ def test_truediv():
 def test___div__():
     inter_df_math_helper("__div__")
 
+
 # END test inter df math functions
 
 
@@ -118,9 +146,7 @@ def comparison_inter_ops_helper(op):
     modin_df = pd.DataFrame(frame_data)
     pandas_df = pandas.DataFrame(frame_data)
 
-    assert df_equals(
-        getattr(modin_df, op)(modin_df), getattr(pandas_df, op)(pandas_df)
-    )
+    assert df_equals(getattr(modin_df, op)(modin_df), getattr(pandas_df, op)(pandas_df))
     assert df_equals(getattr(modin_df, op)(4), getattr(pandas_df, op)(4))
     assert df_equals(getattr(modin_df, op)(4.0), getattr(pandas_df, op)(4.0))
 
@@ -156,6 +182,8 @@ def test_lt():
 
 def test_ne():
     comparison_inter_ops_helper("ne")
+
+
 # END test comparison of inter operation functions
 
 
@@ -209,6 +237,8 @@ def test_rtruediv():
 
 def test___rsub__():
     inter_df_math_right_ops_helper("__rsub__")
+
+
 # END test dataframe right operations
 
 
@@ -232,8 +262,9 @@ def test_add_prefix(modin_df, pandas_df):
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 @pytest.mark.parametrize("testfunc", test_func_values, ids=test_func_keys)
 def test_applymap(request, modin_df, pandas_df, testfunc):
-    if (not name_contains(request.node.name, numeric_test_funcs) or 
-            name_contains(request.node.name, numeric_dfs)):
+    if not name_contains(request.node.name, numeric_test_funcs) or name_contains(
+        request.node.name, numeric_dfs
+    ):
         new_ray_df = modin_df.applymap(testfunc)
         new_pandas_df = pandas_df.applymap(testfunc)
 
@@ -288,7 +319,9 @@ def test_ftypes(modin_df, pandas_df):
 @pytest.mark.parametrize("key", indices_values, ids=indices_keys)
 def test_get(modin_df, pandas_df, key):
     assert df_equals(modin_df.get(key), pandas_df.get(key))
-    assert df_equals(modin_df.get(key, default="default"), pandas_df.get(key, default="default"))
+    assert df_equals(
+        modin_df.get(key, default="default"), pandas_df.get(key, default="default")
+    )
 
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
@@ -297,8 +330,12 @@ def test_get_dtype_counts(modin_df, pandas_df):
 
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
-@pytest.mark.parametrize("dummy_na", bool_arg_values, ids=arg_keys("dummy_na", bool_arg_keys))
-@pytest.mark.parametrize("drop_first", bool_arg_values, ids=arg_keys("drop_first", bool_arg_keys))
+@pytest.mark.parametrize(
+    "dummy_na", bool_arg_values, ids=arg_keys("dummy_na", bool_arg_keys)
+)
+@pytest.mark.parametrize(
+    "drop_first", bool_arg_values, ids=arg_keys("drop_first", bool_arg_keys)
+)
 def test_get_dummies(modin_df, pandas_df, dummy_na, drop_first):
     result = pd.get_dummies(modin_df, dummy_na=dummy_na, drop_first=drop_first)
     expected = pandas.get_dummies(pandas_df, dummy_na=dummy_na, drop_first=drop_first)
@@ -314,8 +351,9 @@ def test_get_ftype_counts(modin_df, pandas_df):
 @pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
 @pytest.mark.parametrize("func", agg_func_values, ids=agg_func_keys)
 def test_agg(request, modin_df, pandas_df, axis, func):
-    if (name_contains(request.node.name, ["over rows"]) or
-            not name_contains(request.node.name, numeric_agg_funcs)):
+    if name_contains(request.node.name, ["over rows"]) or not name_contains(
+        request.node.name, numeric_agg_funcs
+    ):
         modin_result = modin_df.agg(func, axis)
         pandas_result = pandas_df.agg(func, axis)
         assert df_equals(modin_result, pandas_result)
@@ -328,8 +366,9 @@ def test_agg(request, modin_df, pandas_df, axis, func):
 @pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
 @pytest.mark.parametrize("func", agg_func_values, ids=agg_func_keys)
 def test_aggregate(request, modin_df, pandas_df, func, axis):
-    if (name_contains(request.node.name, ["over rows"]) or
-            not name_contains(request.node.name, numeric_agg_funcs)):
+    if name_contains(request.node.name, ["over rows"]) or not name_contains(
+        request.node.name, numeric_agg_funcs
+    ):
         modin_result = modin_df.aggregate(func, axis)
         pandas_result = pandas_df.aggregate(func, axis)
         assert df_equals(modin_result, pandas_result)
@@ -347,8 +386,12 @@ def test_align(modin_df, pandas_df):
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 @pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
-@pytest.mark.parametrize("skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys))
-@pytest.mark.parametrize("bool_only", bool_none_arg_values, ids=arg_keys("bool_only", bool_none_arg_keys))
+@pytest.mark.parametrize(
+    "skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys)
+)
+@pytest.mark.parametrize(
+    "bool_only", bool_none_arg_values, ids=arg_keys("bool_only", bool_none_arg_keys)
+)
 def test_all(modin_df, pandas_df, axis, skipna, bool_only):
     modin_result = modin_df.all(axis=axis, skipna=skipna, bool_only=bool_only)
     pandas_result = pandas_df.all(axis=axis, skipna=skipna, bool_only=bool_only)
@@ -357,8 +400,12 @@ def test_all(modin_df, pandas_df, axis, skipna, bool_only):
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 @pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
-@pytest.mark.parametrize("skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys))
-@pytest.mark.parametrize("bool_only", bool_none_arg_values, ids=arg_keys("bool_only", bool_none_arg_keys))
+@pytest.mark.parametrize(
+    "skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys)
+)
+@pytest.mark.parametrize(
+    "bool_only", bool_none_arg_values, ids=arg_keys("bool_only", bool_none_arg_keys)
+)
 def test_any(modin_df, pandas_df, axis, skipna, bool_only):
     modin_result = modin_df.any(axis=axis, skipna=skipna, bool_only=bool_only)
     pandas_result = pandas_df.any(axis=axis, skipna=skipna, bool_only=bool_only)
@@ -391,8 +438,9 @@ def test_append():
 @pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
 @pytest.mark.parametrize("func", agg_func_values, ids=agg_func_keys)
 def test_apply(request, modin_df, pandas_df, func, axis):
-    if (name_contains(request.node.name, ["over rows"]) or
-            not name_contains(request.node.name, numeric_agg_funcs)):
+    if name_contains(request.node.name, ["over rows"]) or not name_contains(
+        request.node.name, numeric_agg_funcs
+    ):
         modin_result = modin_df.apply(func, axis)
         pandas_result = pandas_df.apply(func, axis)
         assert df_equals(modin_result, pandas_result)
@@ -404,7 +452,7 @@ def test_apply(request, modin_df, pandas_df, func, axis):
 @pytest.mark.skip(reason="Defaulting to Pandas")
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_apply_special(request, modin_df, pandas_df):
-    if (name_contains(request.node.name, numeric_dfs)):
+    if name_contains(request.node.name, numeric_dfs):
         modin_result = modin_df.apply(lambda df: -df, axis=0)
         pandas_result = pandas_df.apply(lambda df: -df, axis=0)
         assert df_equals(modin_result, pandas_result)
@@ -416,7 +464,6 @@ def test_apply_special(request, modin_df, pandas_df):
         modin_result = modin_df.apply(lambda df: df.drop(key), axis=1)
         pandas_result = pandas_df.apply(lambda df: df.drop(key), axis=1)
         assert df_equals(modin_result, pandas_result)
-
 
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
@@ -668,7 +715,9 @@ def test_corrwith(modin_df, pandas_df):
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 @pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
-@pytest.mark.parametrize("numeric_only", bool_arg_values, ids=arg_keys("numeric_only", bool_arg_keys))
+@pytest.mark.parametrize(
+    "numeric_only", bool_arg_values, ids=arg_keys("numeric_only", bool_arg_keys)
+)
 def test_count(modin_df, pandas_df, axis, numeric_only):
     modin_result = modin_df.count(axis=axis, numeric_only=numeric_only)
     pandas_result = pandas_df.count(axis=axis, numeric_only=numeric_only)
@@ -684,7 +733,9 @@ def test_cov(modin_df, pandas_df):
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 @pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
-@pytest.mark.parametrize("skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys))
+@pytest.mark.parametrize(
+    "skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys)
+)
 def test_cummax(request, modin_df, pandas_df, axis, skipna):
     if name_contains(request.node.name, numeric_dfs):
         modin_result = modin_df.cummax(axis=axis, skipna=skipna)
@@ -697,7 +748,9 @@ def test_cummax(request, modin_df, pandas_df, axis, skipna):
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 @pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
-@pytest.mark.parametrize("skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys))
+@pytest.mark.parametrize(
+    "skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys)
+)
 def test_cummin(request, modin_df, pandas_df, axis, skipna):
     if name_contains(request.node.name, numeric_dfs):
         modin_result = modin_df.cummin(axis=axis, skipna=skipna)
@@ -710,7 +763,9 @@ def test_cummin(request, modin_df, pandas_df, axis, skipna):
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 @pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
-@pytest.mark.parametrize("skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys))
+@pytest.mark.parametrize(
+    "skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys)
+)
 def test_cumprod(request, modin_df, pandas_df, axis, skipna):
     if name_contains(request.node.name, numeric_dfs):
         modin_result = modin_df.cumprod(axis=axis, skipna=skipna)
@@ -723,7 +778,9 @@ def test_cumprod(request, modin_df, pandas_df, axis, skipna):
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 @pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
-@pytest.mark.parametrize("skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys))
+@pytest.mark.parametrize(
+    "skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys)
+)
 def test_cumsum(request, modin_df, pandas_df, axis, skipna):
     if name_contains(request.node.name, numeric_dfs):
         modin_result = modin_df.cumsum(axis=axis, skipna=skipna)
@@ -741,7 +798,9 @@ def test_describe(modin_df, pandas_df):
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 @pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
-@pytest.mark.parametrize("periods", int_arg_values, ids=arg_keys("periods", int_arg_keys))
+@pytest.mark.parametrize(
+    "periods", int_arg_values, ids=arg_keys("periods", int_arg_keys)
+)
 def test_diff(request, modin_df, pandas_df, axis, periods):
     if name_contains(request.node.name, numeric_dfs):
         modin_result = modin_df.diff(axis=axis, periods=periods)
@@ -756,9 +815,7 @@ def test_drop():
     assert df_equals(modin_simple.drop("A", axis=1), simple[["B"]])
     assert df_equals(modin_simple.drop(["A", "B"], axis="columns"), simple[[]])
     assert df_equals(modin_simple.drop([0, 1, 3], axis=0), simple.loc[[2], :])
-    assert df_equals(
-        modin_simple.drop([0, 3], axis="index"), simple.loc[[1, 2], :]
-    )
+    assert df_equals(modin_simple.drop([0, 3], axis="index"), simple.loc[[1, 2], :])
 
     pytest.raises(ValueError, modin_simple.drop, 5)
     pytest.raises(ValueError, modin_simple.drop, "C", 1)
@@ -845,7 +902,9 @@ def test_drop_duplicates(modin_df, pandas_df):
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 @pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
 @pytest.mark.parametrize("how", ["any", "all"], ids=["any", "all"])
-@pytest.mark.parametrize("inplace", bool_arg_values, ids=arg_keys("inplace", bool_arg_keys))
+@pytest.mark.parametrize(
+    "inplace", bool_arg_values, ids=arg_keys("inplace", bool_arg_keys)
+)
 def test_dropna(modin_df, pandas_df, axis, how, inplace):
     pandas_result = pandas_df.dropna(axis=axis, how=how, inplace=inplace)
     modin_result = modin_df.dropna(axis=axis, how=how, inplace=inplace)
@@ -861,8 +920,14 @@ def test_dropna_inplace(modin_df, pandas_df):
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_dropna_multiple_axes(modin_df, pandas_df):
-    assert df_equals(modin_df.dropna(how="all", axis=[0, 1]), pandas_df.dropna(how="all", axis=[0, 1]))
-    assert df_equals(modin_df.dropna(how="all", axis=(0, 1)), pandas_df.dropna(how="all", axis=(0, 1)))
+    assert df_equals(
+        modin_df.dropna(how="all", axis=[0, 1]),
+        pandas_df.dropna(how="all", axis=[0, 1]),
+    )
+    assert df_equals(
+        modin_df.dropna(how="all", axis=(0, 1)),
+        pandas_df.dropna(how="all", axis=(0, 1)),
+    )
 
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
@@ -886,14 +951,26 @@ def test_dropna_multiple_axes_inplace(modin_df, pandas_df):
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_dropna_subset(request, modin_df, pandas_df):
-    if not name_contains(request.node.name, ['empty_data']):
+    if not name_contains(request.node.name, ["empty_data"]):
         column_subset = modin_df.columns[0:2]
-        assert df_equals(modin_df.dropna(how="all", subset=column_subset), pandas_df.dropna(how="all", subset=column_subset))
-        assert df_equals(modin_df.dropna(how="any", subset=column_subset), pandas_df.dropna(how="any", subset=column_subset))
+        assert df_equals(
+            modin_df.dropna(how="all", subset=column_subset),
+            pandas_df.dropna(how="all", subset=column_subset),
+        )
+        assert df_equals(
+            modin_df.dropna(how="any", subset=column_subset),
+            pandas_df.dropna(how="any", subset=column_subset),
+        )
 
         row_subset = modin_df.index[0:2]
-        assert df_equals(modin_df.dropna(how="all", axis=1, subset=row_subset), pandas_df.dropna(how="all", axis=1, subset=row_subset))
-        assert df_equals(modin_df.dropna(how="any", axis=1, subset=row_subset), pandas_df.dropna(how="any", axis=1, subset=row_subset))
+        assert df_equals(
+            modin_df.dropna(how="all", axis=1, subset=row_subset),
+            pandas_df.dropna(how="all", axis=1, subset=row_subset),
+        )
+        assert df_equals(
+            modin_df.dropna(how="any", axis=1, subset=row_subset),
+            pandas_df.dropna(how="any", axis=1, subset=row_subset),
+        )
 
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
@@ -1141,7 +1218,9 @@ def test_ffill2():
     test_data.tsframe["A"][:5] = np.nan
     test_data.tsframe["A"][-5:] = np.nan
     modin_df = pd.DataFrame(test_data.tsframe)
-    assert df_equals(modin_df.fillna(method="ffill"), test_data.tsframe.fillna(method="ffill"))
+    assert df_equals(
+        modin_df.fillna(method="ffill"), test_data.tsframe.fillna(method="ffill")
+    )
 
 
 def test_bfill2():
@@ -1149,7 +1228,9 @@ def test_bfill2():
     test_data.tsframe["A"][:5] = np.nan
     test_data.tsframe["A"][-5:] = np.nan
     modin_df = pd.DataFrame(test_data.tsframe)
-    assert df_equals(modin_df.fillna(method="bfill"), test_data.tsframe.fillna(method="bfill"))
+    assert df_equals(
+        modin_df.fillna(method="bfill"), test_data.tsframe.fillna(method="bfill")
+    )
 
 
 def test_fillna_inplace():
@@ -1185,11 +1266,16 @@ def test_frame_fillna_limit(modin_df, pandas_df):
 
     result = pandas_df[:2].reindex(index)
     modin_df = pd.DataFrame(result)
-    assert df_equals(modin_df.fillna(method="pad", limit=2), result.fillna(method="pad", limit=2))
+    assert df_equals(
+        modin_df.fillna(method="pad", limit=2), result.fillna(method="pad", limit=2)
+    )
 
     result = pandas_df[-2:].reindex(index)
     modin_df = pd.DataFrame(result)
-    assert df_equals(modin_df.fillna(method="backfill", limit=2), result.fillna(method="backfill", limit=2))
+    assert df_equals(
+        modin_df.fillna(method="backfill", limit=2),
+        result.fillna(method="backfill", limit=2),
+    )
 
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
@@ -1198,11 +1284,16 @@ def test_frame_pad_backfill_limit(modin_df, pandas_df):
 
     result = pandas_df[:2].reindex(index)
     modin_df = pd.DataFrame(result)
-    assert df_equals(modin_df.fillna(method="pad", limit=2), result.fillna(method="pad", limit=2))
+    assert df_equals(
+        modin_df.fillna(method="pad", limit=2), result.fillna(method="pad", limit=2)
+    )
 
     result = pandas_df[-2:].reindex(index)
     modin_df = pd.DataFrame(result)
-    assert df_equals(modin_df.fillna(method="backfill", limit=2), result.fillna(method="backfill", limit=2))
+    assert df_equals(
+        modin_df.fillna(method="backfill", limit=2),
+        result.fillna(method="backfill", limit=2),
+    )
 
 
 def test_fillna_dtype_conversion():
@@ -1228,18 +1319,25 @@ def test_fillna_skip_certain_blocks(modin_df, pandas_df):
 def test_fillna_dict_series(request, modin_df, pandas_df):
     # Only test if nonempty data because no column names for empty dataframe
     if "empty_data" not in request.node.name:
-        #if request.node.name != 
+        # if request.node.name !=
         col1 = modin_df.columns[0]
         col2 = modin_df.columns[-1]
-        col3 = modin_df.columns[int(modin_df.shape[1]/2)]
+        col3 = modin_df.columns[int(modin_df.shape[1] / 2)]
 
-        assert df_equals(modin_df.fillna({col1: 0, col2: 5}), pandas_df.fillna({col1: 0, col2: 5}))
+        assert df_equals(
+            modin_df.fillna({col1: 0, col2: 5}), pandas_df.fillna({col1: 0, col2: 5})
+        )
 
-        assert df_equals(modin_df.fillna({col1: 0, col2: 5, col3: 7}), pandas_df.fillna({col1: 0, col2: 5, col3: 7}))
+        assert df_equals(
+            modin_df.fillna({col1: 0, col2: 5, col3: 7}),
+            pandas_df.fillna({col1: 0, col2: 5, col3: 7}),
+        )
 
         with pytest.raises(NotImplementedError):
             # Series treated same as dict
-            assert df_equals(modin_df.fillna(pandas_df.max()), pandas_df.fillna(pandas_df.max()))
+            assert df_equals(
+                modin_df.fillna(pandas_df.max()), pandas_df.fillna(pandas_df.max())
+            )
 
 
 def test_fillna_dataframe():
@@ -1264,9 +1362,15 @@ def test_fillna_dataframe():
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_fillna_columns(modin_df, pandas_df):
-    assert df_equals(modin_df.fillna(method="ffill", axis=1), pandas_df.fillna(method="ffill", axis=1))
+    assert df_equals(
+        modin_df.fillna(method="ffill", axis=1),
+        pandas_df.fillna(method="ffill", axis=1),
+    )
 
-    assert df_equals(modin_df.fillna(method="ffill", axis=1), pandas_df.fillna(method="ffill", axis=1))
+    assert df_equals(
+        modin_df.fillna(method="ffill", axis=1),
+        pandas_df.fillna(method="ffill", axis=1),
+    )
 
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
@@ -1323,12 +1427,22 @@ def test_fillna_datetime_columns():
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_filter(modin_df, pandas_df):
     by = {"items": ["col1", "col5"], "regex": "4$|3$", "like": "col"}
-    assert df_equals(modin_df.filter(items=by["items"]), pandas_df.filter(items=by["items"]))
+    assert df_equals(
+        modin_df.filter(items=by["items"]), pandas_df.filter(items=by["items"])
+    )
 
-    assert df_equals(modin_df.filter(regex=by["regex"], axis=0), pandas_df.filter(regex=by["regex"], axis=0))
-    assert df_equals(modin_df.filter(regex=by["regex"], axis=1), pandas_df.filter(regex=by["regex"], axis=1))
+    assert df_equals(
+        modin_df.filter(regex=by["regex"], axis=0),
+        pandas_df.filter(regex=by["regex"], axis=0),
+    )
+    assert df_equals(
+        modin_df.filter(regex=by["regex"], axis=1),
+        pandas_df.filter(regex=by["regex"], axis=1),
+    )
 
-    assert df_equals(modin_df.filter(like=by["like"]), pandas_df.filter(like=by["like"]))
+    assert df_equals(
+        modin_df.filter(like=by["like"]), pandas_df.filter(like=by["like"])
+    )
 
 
 @pytest.mark.skip(reason="Defaulting to Pandas")
@@ -1403,7 +1517,9 @@ def test_iat(modin_df, pandas_df):
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 @pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
-@pytest.mark.parametrize("skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys))
+@pytest.mark.parametrize(
+    "skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys)
+)
 def test_idxmax(modin_df, pandas_df, axis, skipna):
     modin_result = modin_df.all(axis=axis, skipna=skipna)
     pandas_result = pandas_df.all(axis=axis, skipna=skipna)
@@ -1412,7 +1528,9 @@ def test_idxmax(modin_df, pandas_df, axis, skipna):
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 @pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
-@pytest.mark.parametrize("skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys))
+@pytest.mark.parametrize(
+    "skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys)
+)
 def test_idxmin(modin_df, pandas_df, axis, skipna):
     modin_result = modin_df.all(axis=axis, skipna=skipna)
     pandas_result = pandas_df.all(axis=axis, skipna=skipna)
@@ -1477,13 +1595,21 @@ def test_info(request, modin_df, pandas_df):
             info_string = buf.getvalue()
             assert "<class 'modin.pandas.dataframe.DataFrame'>\n" in info_string
             assert "memory usage: " in info_string
-            assert "Data columns (total {} columns):".format(modin_df.shape[1]) in info_string
+            assert (
+                "Data columns (total {} columns):".format(modin_df.shape[1])
+                in info_string
+            )
 
         with io.StringIO() as buf:
             modin_df.info(buf=buf, verbose=False, memory_usage=False)
             info_string = buf.getvalue()
             assert "memory usage: " not in info_string
-            assert "Columns: {0} entries, {1} to {2}".format(modin_df.shape[1], modin_df.columns[0], modin_df.columns[-1]) in info_string
+            assert (
+                "Columns: {0} entries, {1} to {2}".format(
+                    modin_df.shape[1], modin_df.columns[0], modin_df.columns[-1]
+                )
+                in info_string
+            )
 
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
@@ -1493,7 +1619,7 @@ def test_insert(modin_df, pandas_df, loc):
     pandas_df = pandas_df.copy()
     loc %= modin_df.shape[1] + 1
     column = "New Column"
-    key = loc if loc < modin_df.shape[1] else loc-1
+    key = loc if loc < modin_df.shape[1] else loc - 1
     value = modin_df.iloc[:, key]
     modin_df.insert(loc, column, value)
     pandas_df.insert(loc, column, value)
@@ -1687,8 +1813,12 @@ def test_mask(modin_df, pandas_df):
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 @pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
-@pytest.mark.parametrize("skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys))
-@pytest.mark.parametrize("numeric_only", bool_arg_values, ids=arg_keys("numeric_only", bool_arg_keys))
+@pytest.mark.parametrize(
+    "skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys)
+)
+@pytest.mark.parametrize(
+    "numeric_only", bool_arg_values, ids=arg_keys("numeric_only", bool_arg_keys)
+)
 def test_max(modin_df, pandas_df, axis, skipna, numeric_only):
     modin_result = modin_df.max(axis=axis, skipna=skipna, numeric_only=numeric_only)
     pandas_result = pandas_df.max(axis=axis, skipna=skipna, numeric_only=numeric_only)
@@ -1697,8 +1827,14 @@ def test_max(modin_df, pandas_df, axis, skipna, numeric_only):
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 @pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
-@pytest.mark.parametrize("skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys))
-@pytest.mark.parametrize("numeric_only", bool_none_arg_values, ids=arg_keys("numeric_only", bool_none_arg_keys))
+@pytest.mark.parametrize(
+    "skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys)
+)
+@pytest.mark.parametrize(
+    "numeric_only",
+    bool_none_arg_values,
+    ids=arg_keys("numeric_only", bool_none_arg_keys),
+)
 def test_mean(modin_df, pandas_df, axis, skipna, numeric_only):
     modin_result = modin_df.mean(axis=axis, skipna=skipna, numeric_only=numeric_only)
     pandas_result = pandas_df.mean(axis=axis, skipna=skipna, numeric_only=numeric_only)
@@ -1707,11 +1843,19 @@ def test_mean(modin_df, pandas_df, axis, skipna, numeric_only):
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 @pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
-@pytest.mark.parametrize("skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys))
-@pytest.mark.parametrize("numeric_only", bool_none_arg_values, ids=arg_keys("numeric_only", bool_none_arg_keys))
+@pytest.mark.parametrize(
+    "skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys)
+)
+@pytest.mark.parametrize(
+    "numeric_only",
+    bool_none_arg_values,
+    ids=arg_keys("numeric_only", bool_none_arg_keys),
+)
 def test_median(modin_df, pandas_df, axis, skipna, numeric_only):
     modin_result = modin_df.median(axis=axis, skipna=skipna, numeric_only=numeric_only)
-    pandas_result = pandas_df.median(axis=axis, skipna=skipna, numeric_only=numeric_only)
+    pandas_result = pandas_df.median(
+        axis=axis, skipna=skipna, numeric_only=numeric_only
+    )
     assert df_equals(modin_result, pandas_result)
 
 @pytest.mark.skip(reason="Defaulting to Pandas")
@@ -1724,7 +1868,10 @@ def test_melt(modin_df, pandas_df):
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_memory_usage(modin_df, pandas_df):
     assert modin_df.memory_usage(index=True).at["Index"] is not None
-    assert modin_df.memory_usage(deep=True).sum() >= modin_df.memory_usage(deep=False).sum()
+    assert (
+        modin_df.memory_usage(deep=True).sum()
+        >= modin_df.memory_usage(deep=False).sum()
+    )
 
 
 def test_merge():
@@ -1769,21 +1916,27 @@ def test_merge():
             df_equals(modin_result, pandas_result)
 
             # left_on and right_on col1
-            modin_result = modin_df.merge(modin_df2, how=how, left_on="col1", right_on="col1")
+            modin_result = modin_df.merge(
+                modin_df2, how=how, left_on="col1", right_on="col1"
+            )
             pandas_result = pandas_df.merge(
                 pandas_df2, how=how, left_on="col1", right_on="col1"
             )
             df_equals(modin_result, pandas_result)
 
             # left_on and right_on col2
-            modin_result = modin_df.merge(modin_df2, how=how, left_on="col2", right_on="col2")
+            modin_result = modin_df.merge(
+                modin_df2, how=how, left_on="col2", right_on="col2"
+            )
             pandas_result = pandas_df.merge(
                 pandas_df2, how=how, left_on="col2", right_on="col2"
             )
             df_equals(modin_result, pandas_result)
 
         # left_index and right_index
-        modin_result = modin_df.merge(modin_df2, how=how, left_index=True, right_index=True)
+        modin_result = modin_df.merge(
+            modin_df2, how=how, left_index=True, right_index=True
+        )
         pandas_result = pandas_df.merge(
             pandas_df2, how=how, left_index=True, right_index=True
         )
@@ -1792,8 +1945,14 @@ def test_merge():
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 @pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
-@pytest.mark.parametrize("skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys))
-@pytest.mark.parametrize("numeric_only", bool_none_arg_values, ids=arg_keys("numeric_only", bool_none_arg_keys))
+@pytest.mark.parametrize(
+    "skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys)
+)
+@pytest.mark.parametrize(
+    "numeric_only",
+    bool_none_arg_values,
+    ids=arg_keys("numeric_only", bool_none_arg_keys),
+)
 def test_min(modin_df, pandas_df, axis, skipna, numeric_only):
     modin_result = modin_df.min(axis=axis, skipna=skipna, numeric_only=numeric_only)
     pandas_result = pandas_df.min(axis=axis, skipna=skipna, numeric_only=numeric_only)
@@ -1802,8 +1961,12 @@ def test_min(modin_df, pandas_df, axis, skipna, numeric_only):
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 @pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
-@pytest.mark.parametrize("skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys))
-@pytest.mark.parametrize("numeric_only", bool_arg_values, ids=arg_keys("numeric_only", bool_arg_keys))
+@pytest.mark.parametrize(
+    "skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys)
+)
+@pytest.mark.parametrize(
+    "numeric_only", bool_arg_values, ids=arg_keys("numeric_only", bool_arg_keys)
+)
 def test_mode(modin_df, pandas_df, axis, skipna, numeric_only):
     modin_result = modin_df.mode(axis=axis, skipna=skipna, numeric_only=numeric_only)
     pandas_result = pandas_df.mode(axis=axis, skipna=skipna, numeric_only=numeric_only)
@@ -1841,7 +2004,9 @@ def test_nsmallest(modin_df, pandas_df):
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 @pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
-@pytest.mark.parametrize("dropna", bool_arg_values, ids=arg_keys("dropna", bool_arg_keys))
+@pytest.mark.parametrize(
+    "dropna", bool_arg_values, ids=arg_keys("dropna", bool_arg_keys)
+)
 def test_nunique(modin_df, pandas_df, axis, dropna):
     modin_result = modin_df.nunique(axis=axis, dropna=dropna)
     pandas_result = pandas_df.nunique(axis=axis, dropna=dropna)
@@ -1872,9 +2037,15 @@ def test_pipe(modin_df, pandas_df):
     def f(x, arg2=0, arg3=0):
         return x.drop([arg2, arg3])
 
-    assert df_equals(f(g(h(modin_df), arg1=a), arg2=b, arg3=c), (modin_df.pipe(h).pipe(g, arg1=a).pipe(f, arg2=b, arg3=c)))
+    assert df_equals(
+        f(g(h(modin_df), arg1=a), arg2=b, arg3=c),
+        (modin_df.pipe(h).pipe(g, arg1=a).pipe(f, arg2=b, arg3=c)),
+    )
 
-    assert df_equals((modin_df.pipe(h).pipe(g, arg1=a).pipe(f, arg2=b, arg3=c)), (pandas_df.pipe(h).pipe(g, arg1=a).pipe(f, arg2=b, arg3=c)))
+    assert df_equals(
+        (modin_df.pipe(h).pipe(g, arg1=a).pipe(f, arg2=b, arg3=c)),
+        (pandas_df.pipe(h).pipe(g, arg1=a).pipe(f, arg2=b, arg3=c)),
+    )
 
 
 @pytest.mark.skip(reason="Defaulting to Pandas")
@@ -1915,32 +2086,56 @@ def test_pop(request, modin_df, pandas_df):
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 @pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
-@pytest.mark.parametrize("skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys))
-@pytest.mark.parametrize("numeric_only", bool_arg_values, ids=arg_keys("numeric_only", bool_arg_keys))
-@pytest.mark.parametrize("min_count", int_arg_values, ids=arg_keys("min_count", int_arg_keys))
+@pytest.mark.parametrize(
+    "skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys)
+)
+@pytest.mark.parametrize(
+    "numeric_only", bool_arg_values, ids=arg_keys("numeric_only", bool_arg_keys)
+)
+@pytest.mark.parametrize(
+    "min_count", int_arg_values, ids=arg_keys("min_count", int_arg_keys)
+)
 def test_prod(request, modin_df, pandas_df, axis, skipna, numeric_only, min_count):
     if numeric_only or name_contains(request.node.name, numeric_dfs):
-        modin_result = modin_df.prod(axis=axis, skipna=skipna, numeric_only=numeric_only, min_count=min_count)
-        pandas_result = pandas_df.prod(axis=axis, skipna=skipna, numeric_only=numeric_only, min_count=min_count)
+        modin_result = modin_df.prod(
+            axis=axis, skipna=skipna, numeric_only=numeric_only, min_count=min_count
+        )
+        pandas_result = pandas_df.prod(
+            axis=axis, skipna=skipna, numeric_only=numeric_only, min_count=min_count
+        )
         assert df_equals(modin_result, pandas_result)
     else:
         with pytest.raises(TypeError):
-            modin_df.prod(axis=axis, skipna=skipna, numeric_only=numeric_only, min_count=min_count)
+            modin_df.prod(
+                axis=axis, skipna=skipna, numeric_only=numeric_only, min_count=min_count
+            )
 
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 @pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
-@pytest.mark.parametrize("skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys))
-@pytest.mark.parametrize("numeric_only", bool_arg_values, ids=arg_keys("numeric_only", bool_arg_keys))
-@pytest.mark.parametrize("min_count", int_arg_values, ids=arg_keys("min_count", int_arg_keys))
+@pytest.mark.parametrize(
+    "skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys)
+)
+@pytest.mark.parametrize(
+    "numeric_only", bool_arg_values, ids=arg_keys("numeric_only", bool_arg_keys)
+)
+@pytest.mark.parametrize(
+    "min_count", int_arg_values, ids=arg_keys("min_count", int_arg_keys)
+)
 def test_product(request, modin_df, pandas_df, axis, skipna, numeric_only, min_count):
     if numeric_only or name_contains(request.node.name, numeric_dfs):
-        modin_result = modin_df.product(axis=axis, skipna=skipna, numeric_only=numeric_only, min_count=min_count)
-        pandas_result = pandas_df.product(axis=axis, skipna=skipna, numeric_only=numeric_only, min_count=min_count)
+        modin_result = modin_df.product(
+            axis=axis, skipna=skipna, numeric_only=numeric_only, min_count=min_count
+        )
+        pandas_result = pandas_df.product(
+            axis=axis, skipna=skipna, numeric_only=numeric_only, min_count=min_count
+        )
         assert df_equals(modin_result, pandas_result)
     else:
         with pytest.raises(TypeError):
-            modin_df.product(axis=axis, skipna=skipna, numeric_only=numeric_only, min_count=min_count)
+            modin_df.product(
+                axis=axis, skipna=skipna, numeric_only=numeric_only, min_count=min_count
+            )
 
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
@@ -1952,7 +2147,10 @@ def test_quantile(modin_df, pandas_df, q):
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 @pytest.mark.parametrize("funcs", query_func_values, ids=query_func_keys)
 def test_query(request, modin_df, pandas_df, funcs):
-    if name_contains(request.node.name, numeric_dfs) and "empty_data" not in request.node.name:
+    if (
+        name_contains(request.node.name, numeric_dfs)
+        and "empty_data" not in request.node.name
+    ):
         modin_result = modin_df.query(funcs)
         pandas_result = pandas_df.query(funcs)
         assert df_equals(modin_result, pandas_result)
@@ -1960,14 +2158,42 @@ def test_query(request, modin_df, pandas_df, funcs):
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 @pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
-@pytest.mark.parametrize("method", ['average', 'min', 'max', 'first', 'dense'], ids=['average', 'min', 'max', 'first', 'dense'])
-@pytest.mark.parametrize("numeric_only", bool_none_arg_values, ids=arg_keys("numeric_only", bool_none_arg_keys))
-@pytest.mark.parametrize("na_option", ['keep', 'top', 'bottom'], ids=['keep', 'top', 'bottom'])
-@pytest.mark.parametrize("ascending", bool_arg_values, ids=arg_keys("ascending", bool_arg_keys))
+@pytest.mark.parametrize(
+    "method",
+    ["average", "min", "max", "first", "dense"],
+    ids=["average", "min", "max", "first", "dense"],
+)
+@pytest.mark.parametrize(
+    "numeric_only",
+    bool_none_arg_values,
+    ids=arg_keys("numeric_only", bool_none_arg_keys),
+)
+@pytest.mark.parametrize(
+    "na_option", ["keep", "top", "bottom"], ids=["keep", "top", "bottom"]
+)
+@pytest.mark.parametrize(
+    "ascending", bool_arg_values, ids=arg_keys("ascending", bool_arg_keys)
+)
 @pytest.mark.parametrize("pct", bool_arg_values, ids=arg_keys("pct", bool_arg_keys))
-def test_rank(modin_df, pandas_df, axis, method, numeric_only, na_option, ascending, pct):
-    modin_result = modin_df.rank(axis=axis, method=method, numeric_only=numeric_only, na_option=na_option, ascending=ascending, pct=pct)
-    pandas_result = pandas_df.rank(axis=axis, method=method, numeric_only=numeric_only, na_option=na_option, ascending=ascending, pct=pct)
+def test_rank(
+    modin_df, pandas_df, axis, method, numeric_only, na_option, ascending, pct
+):
+    modin_result = modin_df.rank(
+        axis=axis,
+        method=method,
+        numeric_only=numeric_only,
+        na_option=na_option,
+        ascending=ascending,
+        pct=pct,
+    )
+    pandas_result = pandas_df.rank(
+        axis=axis,
+        method=method,
+        numeric_only=numeric_only,
+        na_option=na_option,
+        ascending=ascending,
+        pct=pct,
+    )
     assert df_equals(modin_result, pandas_result)
 
 
@@ -1986,11 +2212,20 @@ def test_reindex():
 
     assert df_equals(modin_df.reindex([0, 6, 2]), pandas_df.reindex([0, 6, 2]))
 
-    assert df_equals(modin_df.reindex(["col1", "col3", "col4", "col2"], axis=1), pandas_df.reindex(["col1", "col3", "col4", "col2"], axis=1))
+    assert df_equals(
+        modin_df.reindex(["col1", "col3", "col4", "col2"], axis=1),
+        pandas_df.reindex(["col1", "col3", "col4", "col2"], axis=1),
+    )
 
-    assert df_equals(modin_df.reindex(["col1", "col7", "col4", "col8"], axis=1), pandas_df.reindex(["col1", "col7", "col4", "col8"], axis=1))
+    assert df_equals(
+        modin_df.reindex(["col1", "col7", "col4", "col8"], axis=1),
+        pandas_df.reindex(["col1", "col7", "col4", "col8"], axis=1),
+    )
 
-    assert df_equals(modin_df.reindex(index=[0, 1, 5], columns=["col1", "col7", "col4", "col8"]), pandas_df.reindex(index=[0, 1, 5], columns=["col1", "col7", "col4", "col8"]))
+    assert df_equals(
+        modin_df.reindex(index=[0, 1, 5], columns=["col1", "col7", "col4", "col8"]),
+        pandas_df.reindex(index=[0, 1, 5], columns=["col1", "col7", "col4", "col8"]),
+    )
 
 
 @pytest.mark.skip(reason="Defaulting to Pandas")
@@ -2012,13 +2247,17 @@ def test_rename_sanity():
     mapping = {"A": "a", "B": "b", "C": "c", "D": "d"}
 
     modin_df = pd.DataFrame(test_data.frame)
-    assert df_equals(modin_df.rename(columns=mapping), test_data.frame.rename(columns=mapping))
+    assert df_equals(
+        modin_df.rename(columns=mapping), test_data.frame.rename(columns=mapping)
+    )
 
     renamed2 = test_data.frame.rename(columns=str.lower)
     assert df_equals(modin_df.rename(columns=str.lower), renamed2)
 
     modin_df = pd.DataFrame(renamed2)
-    assert df_equals(modin_df.rename(columns=str.upper), renamed2.rename(columns=str.upper))
+    assert df_equals(
+        modin_df.rename(columns=str.upper), renamed2.rename(columns=str.upper)
+    )
 
     # index
     data = {"A": {"foo": 0, "bar": 1}}
@@ -2100,7 +2339,9 @@ def test_rename_multiindex():
 
     # dict
     renamed = df.rename(columns={"fizz1": "fizz3", "buzz2": "buzz3"}, level=0)
-    modin_renamed = modin_df.rename(columns={"fizz1": "fizz3", "buzz2": "buzz3"}, level=0)
+    modin_renamed = modin_df.rename(
+        columns={"fizz1": "fizz3", "buzz2": "buzz3"}, level=0
+    )
     tm.assert_index_equal(renamed.columns, modin_renamed.columns)
     renamed = df.rename(columns={"fizz1": "fizz3", "buzz2": "buzz3"}, level="fizz")
     modin_renamed = modin_df.rename(
@@ -2109,7 +2350,9 @@ def test_rename_multiindex():
     tm.assert_index_equal(renamed.columns, modin_renamed.columns)
 
     renamed = df.rename(columns={"fizz1": "fizz3", "buzz2": "buzz3"}, level=1)
-    modin_renamed = modin_df.rename(columns={"fizz1": "fizz3", "buzz2": "buzz3"}, level=1)
+    modin_renamed = modin_df.rename(
+        columns={"fizz1": "fizz3", "buzz2": "buzz3"}, level=1
+    )
     tm.assert_index_equal(renamed.columns, modin_renamed.columns)
     renamed = df.rename(columns={"fizz1": "fizz3", "buzz2": "buzz3"}, level="buzz")
     modin_renamed = modin_df.rename(
@@ -2151,7 +2394,9 @@ def test_rename_inplace():
     test_data = TestData().frame
     modin_df = pd.DataFrame(test_data)
 
-    assert df_equals(modin_df.rename(columns={"C": "foo"}), test_data.rename(columns={"C": "foo"}))
+    assert df_equals(
+        modin_df.rename(columns={"C": "foo"}), test_data.rename(columns={"C": "foo"})
+    )
 
     frame = test_data.copy()
     modin_frame = modin_df.copy()
@@ -2226,7 +2471,10 @@ def test_resample(modin_df, pandas_df):
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_reset_index(modin_df, pandas_df, inplace=False):
     if not inplace:
-        assert df_equals(modin_df.reset_index(inplace=inplace), pandas_df.reset_index(inplace=inplace))
+        assert df_equals(
+            modin_df.reset_index(inplace=inplace),
+            pandas_df.reset_index(inplace=inplace),
+        )
     else:
         modin_df_cp = modin_df.copy()
         pd_df_cp = pandas_df.copy()
@@ -2254,8 +2502,14 @@ def test_sample(modin_df, pandas_df, axis):
     with pytest.raises(ValueError):
         modin_df.sample(n=3, frac=0.4, axis=axis)
 
-    assert df_equals(modin_df.sample(frac=0.5, random_state=42, axis=axis), pandas_df.sample(frac=0.5, random_state=42, axis=axis))
-    assert df_equals(modin_df.sample(n=2, random_state=42, axis=axis), pandas_df.sample(n=2, random_state=42, axis=axis))
+    assert df_equals(
+        modin_df.sample(frac=0.5, random_state=42, axis=axis),
+        pandas_df.sample(frac=0.5, random_state=42, axis=axis),
+    )
+    assert df_equals(
+        modin_df.sample(n=2, random_state=42, axis=axis),
+        pandas_df.sample(n=2, random_state=42, axis=axis),
+    )
 
 
 @pytest.mark.skip(reason="Defaulting to Pandas")
@@ -2319,12 +2573,16 @@ def test_set_axis(modin_df, pandas_df, axis):
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 @pytest.mark.parametrize("drop", bool_arg_values, ids=arg_keys("drop", bool_arg_keys))
-@pytest.mark.parametrize("append", bool_arg_values, ids=arg_keys("append", bool_arg_keys))
+@pytest.mark.parametrize(
+    "append", bool_arg_values, ids=arg_keys("append", bool_arg_keys)
+)
 def test_set_index(request, modin_df, pandas_df, drop, append):
     if "empty_data" not in request.node.name:
         key = modin_df.columns[0]
         modin_result = modin_df.set_index(key, drop=drop, append=append, inplace=False)
-        pandas_result = pandas_df.set_index(key, drop=drop, append=append, inplace=False)
+        pandas_result = pandas_df.set_index(
+            key, drop=drop, append=append, inplace=False
+        )
         assert df_equals(modin_result, pandas_result)
 
         modin_df_copy = modin_df.copy()
@@ -2360,8 +2618,14 @@ def test_size(modin_df, pandas_df):
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 @pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
-@pytest.mark.parametrize("skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys))
-@pytest.mark.parametrize("numeric_only", bool_none_arg_values, ids=arg_keys("numeric_only", bool_none_arg_keys))
+@pytest.mark.parametrize(
+    "skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys)
+)
+@pytest.mark.parametrize(
+    "numeric_only",
+    bool_none_arg_values,
+    ids=arg_keys("numeric_only", bool_none_arg_keys),
+)
 def test_skew(modin_df, pandas_df, axis, skipna, numeric_only):
     modin_result = modin_df.skew(axis=axis, skipna=skipna, numeric_only=numeric_only)
     pandas_result = pandas_df.skew(axis=axis, skipna=skipna, numeric_only=numeric_only)
@@ -2376,49 +2640,81 @@ def test_slice_shift(modin_df, pandas_df):
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 @pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
-@pytest.mark.parametrize("ascending", bool_arg_values, ids=arg_keys("ascending", bool_arg_keys))
+@pytest.mark.parametrize(
+    "ascending", bool_arg_values, ids=arg_keys("ascending", bool_arg_keys)
+)
 @pytest.mark.parametrize("na_position", ["first", "last"], ids=["first", "last"])
-@pytest.mark.parametrize("sort_remaining", bool_arg_values, ids=arg_keys("sort_remaining", bool_arg_keys))
+@pytest.mark.parametrize(
+    "sort_remaining", bool_arg_values, ids=arg_keys("sort_remaining", bool_arg_keys)
+)
 def test_sort_index(modin_df, pandas_df, axis, ascending, na_position, sort_remaining):
-    modin_result = modin_df.sort_index(axis=axis, ascending=ascending, na_position=na_position, inplace=False)
-    pandas_result = pandas_df.sort_index(axis=axis, ascending=ascending, na_position=na_position, inplace=False)
+    modin_result = modin_df.sort_index(
+        axis=axis, ascending=ascending, na_position=na_position, inplace=False
+    )
+    pandas_result = pandas_df.sort_index(
+        axis=axis, ascending=ascending, na_position=na_position, inplace=False
+    )
     assert df_equals(modin_result, pandas_result)
 
     modin_df_copy = modin_df.copy()
-    modin_df.sort_index(axis=axis, ascending=ascending, na_position=na_position, inplace=True)
-    pandas_df.sort_index(axis=axis, ascending=ascending, na_position=na_position, inplace=True)
+    modin_df.sort_index(
+        axis=axis, ascending=ascending, na_position=na_position, inplace=True
+    )
+    pandas_df.sort_index(
+        axis=axis, ascending=ascending, na_position=na_position, inplace=True
+    )
     assert df_equals(modin_df, pandas_df)
 
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 @pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
-@pytest.mark.parametrize("ascending", bool_arg_values, ids=arg_keys("ascending", bool_arg_keys))
+@pytest.mark.parametrize(
+    "ascending", bool_arg_values, ids=arg_keys("ascending", bool_arg_keys)
+)
 @pytest.mark.parametrize("na_position", ["first", "last"], ids=["first", "last"])
 def test_sort_values(request, modin_df, pandas_df, axis, ascending, na_position):
-    if "empty_data" not in request.node.name and ((axis == 0 or axis == 'over rows') or name_contains(request.node.name, numeric_dfs)):
+    if "empty_data" not in request.node.name and (
+        (axis == 0 or axis == "over rows")
+        or name_contains(request.node.name, numeric_dfs)
+    ):
         index = modin_df.index if axis or axis == "columns" else modin_df.columns
         key = index[0]
-        modin_result = modin_df.sort_values(key, axis=axis, ascending=ascending, na_position=na_position, inplace=False)
-        pandas_result = pandas_df.sort_values(key, axis=axis, ascending=ascending, na_position=na_position, inplace=False)
+        modin_result = modin_df.sort_values(
+            key, axis=axis, ascending=ascending, na_position=na_position, inplace=False
+        )
+        pandas_result = pandas_df.sort_values(
+            key, axis=axis, ascending=ascending, na_position=na_position, inplace=False
+        )
         assert df_equals(modin_result, pandas_result)
 
         modin_df_cp = modin_df.copy()
         pandas_df_cp = pandas_df.copy()
-        modin_df_cp.sort_values(key, axis=axis, ascending=ascending, na_position=na_position, inplace=True)
-        pandas_df_cp.sort_values(key, axis=axis, ascending=ascending, na_position=na_position, inplace=True)
+        modin_df_cp.sort_values(
+            key, axis=axis, ascending=ascending, na_position=na_position, inplace=True
+        )
+        pandas_df_cp.sort_values(
+            key, axis=axis, ascending=ascending, na_position=na_position, inplace=True
+        )
         assert df_equals(modin_df_cp, pandas_df_cp)
 
         keys = [key, index[-1]]
-        modin_result = modin_df.sort_values(keys, axis=axis, ascending=ascending, na_position=na_position, inplace=False)
-        pandas_result = pandas_df.sort_values(keys, axis=axis, ascending=ascending, na_position=na_position, inplace=False)
+        modin_result = modin_df.sort_values(
+            keys, axis=axis, ascending=ascending, na_position=na_position, inplace=False
+        )
+        pandas_result = pandas_df.sort_values(
+            keys, axis=axis, ascending=ascending, na_position=na_position, inplace=False
+        )
         assert df_equals(modin_result, pandas_result)
 
         modin_df_cp = modin_df.copy()
         pandas_df_cp = pandas_df.copy()
-        modin_df_cp.sort_values(keys, axis=axis, ascending=ascending, na_position=na_position, inplace=True)
-        pandas_df_cp.sort_values(keys, axis=axis, ascending=ascending, na_position=na_position, inplace=True)
+        modin_df_cp.sort_values(
+            keys, axis=axis, ascending=ascending, na_position=na_position, inplace=True
+        )
+        pandas_df_cp.sort_values(
+            keys, axis=axis, ascending=ascending, na_position=na_position, inplace=True
+        )
         assert df_equals(modin_df_cp, pandas_df_cp)
-
 
 
 @pytest.mark.skip(reason="Defaulting to Pandas")
@@ -2444,12 +2740,22 @@ def test_stack(modin_df, pandas_df):
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 @pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
-@pytest.mark.parametrize("skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys))
-@pytest.mark.parametrize("numeric_only", bool_none_arg_values, ids=arg_keys("numeric_only", bool_none_arg_keys))
+@pytest.mark.parametrize(
+    "skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys)
+)
+@pytest.mark.parametrize(
+    "numeric_only",
+    bool_none_arg_values,
+    ids=arg_keys("numeric_only", bool_none_arg_keys),
+)
 @pytest.mark.parametrize("ddof", int_arg_values, ids=arg_keys("ddof", int_arg_keys))
 def test_std(modin_df, pandas_df, axis, skipna, numeric_only, ddof):
-    modin_result = modin_df.std(axis=axis, skipna=skipna, numeric_only=numeric_only, ddof=ddof)
-    pandas_result = pandas_df.std(axis=axis, skipna=skipna, numeric_only=numeric_only, ddof=ddof)
+    modin_result = modin_df.std(
+        axis=axis, skipna=skipna, numeric_only=numeric_only, ddof=ddof
+    )
+    pandas_result = pandas_df.std(
+        axis=axis, skipna=skipna, numeric_only=numeric_only, ddof=ddof
+    )
     assert df_equals(modin_result, pandas_result)
 
 
@@ -2462,17 +2768,29 @@ def test_style(modin_df, pandas_df):
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 @pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
-@pytest.mark.parametrize("skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys))
-@pytest.mark.parametrize("numeric_only", bool_arg_values, ids=arg_keys("numeric_only", bool_arg_keys))
-@pytest.mark.parametrize("min_count", int_arg_values, ids=arg_keys("min_count", int_arg_keys))
+@pytest.mark.parametrize(
+    "skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys)
+)
+@pytest.mark.parametrize(
+    "numeric_only", bool_arg_values, ids=arg_keys("numeric_only", bool_arg_keys)
+)
+@pytest.mark.parametrize(
+    "min_count", int_arg_values, ids=arg_keys("min_count", int_arg_keys)
+)
 def test_sum(request, modin_df, pandas_df, axis, skipna, numeric_only, min_count):
     if numeric_only or name_contains(request.node.name, numeric_dfs):
-        modin_result = modin_df.sum(axis=axis, skipna=skipna, numeric_only=numeric_only, min_count=min_count)
-        pandas_result = pandas_df.sum(axis=axis, skipna=skipna, numeric_only=numeric_only, min_count=min_count)
+        modin_result = modin_df.sum(
+            axis=axis, skipna=skipna, numeric_only=numeric_only, min_count=min_count
+        )
+        pandas_result = pandas_df.sum(
+            axis=axis, skipna=skipna, numeric_only=numeric_only, min_count=min_count
+        )
         assert df_equals(modin_result, pandas_result)
     else:
         with pytest.raises(TypeError):
-            modin_df.sum(axis=axis, skipna=skipna, numeric_only=numeric_only, min_count=min_count)
+            modin_df.sum(
+                axis=axis, skipna=skipna, numeric_only=numeric_only, min_count=min_count
+            )
 
 
 @pytest.mark.skip(reason="Defaulting to Pandas")
@@ -2611,12 +2929,22 @@ def test_values(modin_df, pandas_df):
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 @pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
-@pytest.mark.parametrize("skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys))
-@pytest.mark.parametrize("numeric_only", bool_none_arg_values, ids=arg_keys("numeric_only", bool_none_arg_keys))
+@pytest.mark.parametrize(
+    "skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys)
+)
+@pytest.mark.parametrize(
+    "numeric_only",
+    bool_none_arg_values,
+    ids=arg_keys("numeric_only", bool_none_arg_keys),
+)
 @pytest.mark.parametrize("ddof", int_arg_values, ids=arg_keys("ddof", int_arg_keys))
 def test_var(modin_df, pandas_df, axis, skipna, numeric_only, ddof):
-    modin_result = modin_df.var(axis=axis, skipna=skipna, numeric_only=numeric_only, ddof=ddof)
-    pandas_result = pandas_df.var(axis=axis, skipna=skipna, numeric_only=numeric_only, ddof=ddof)
+    modin_result = modin_df.var(
+        axis=axis, skipna=skipna, numeric_only=numeric_only, ddof=ddof
+    )
+    pandas_result = pandas_df.var(
+        axis=axis, skipna=skipna, numeric_only=numeric_only, ddof=ddof
+    )
     assert df_equals(modin_result, pandas_result)
 
 
@@ -2885,4 +3213,3 @@ def test___repr__():
     modin_df = pd.DataFrame(frame_data)
 
     assert repr(pandas_df) == repr(modin_df)
-
