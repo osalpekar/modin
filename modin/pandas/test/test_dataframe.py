@@ -516,7 +516,6 @@ def test_between_time(modin_df, pandas_df):
         modin_df.between_time(None, None)
 
 
-@pytest.fixture
 def test_bfill():
     test_data = TestData()
     test_data.tsframe["A"][:5] = np.nan
@@ -553,55 +552,69 @@ def test_boxplot(modin_df, pandas_df):
     assert modin_df.boxplot() == to_pandas(modin_df).boxplot()
 
 
-@pytest.fixture
-def test_clip(ray_df, pandas_df):
+@pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
+@pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
+def test_clip(ray_df, pandas_df, axis):
     # set bounds
     lower, upper = 2, 9
     lower_0 = [0, 14, 6, 1]
     upper_0 = [12, 1, 10, 7]
 
-    # test no input
-    assert ray_df_equals_pandas(ray_df.clip(), pandas_df.clip())
     # test only upper scalar bound
-    assert ray_df_equals_pandas(ray_df.clip(None, lower), pandas_df.clip(None, lower))
+    ray_result = ray_df.clip(None, lower, axis=axis)
+    pandas_result = pandas_df.clip(None, lower, axis=axis)
+    assert df_equals(modin_result, pandas_result)
+
     # test lower and upper scalar bound
-    assert ray_df_equals_pandas(ray_df.clip(lower, upper), pandas_df.clip(lower, upper))
+    ray_result = ray_df.clip(lower, upper, axis=axis)
+    pandas_result = pandas_df.clip(lower, upper, axis=axis)
+    assert df_equals(modin_result, pandas_result)
+
     # test lower and upper list bound on each column
-    assert ray_df_equals_pandas(
-        ray_df.clip(lower_0, upper_0, axis=0), pandas_df.clip(lower_0, upper_0, axis=0)
-    )
+    ray_result = ray_df.clip(lower_0, upper, axis=axis)
+    pandas_result = pandas_df.clip(lower_0, upper, axis=axis)
+    assert df_equals(modin_result, pandas_result)
+
     # test only upper list bound on each column
-    assert ray_df_equals_pandas(
-        ray_df.clip(np.nan, upper_0, axis=0), pandas_df.clip(np.nan, upper_0, axis=0)
-    )
+    ray_result = ray_df.clip(np.nan, upper, axis=axis)
+    pandas_result = pandas_df.clip(np.nan, upper, axis=axis)
+    assert df_equals(modin_result, pandas_result)
 
 
-@pytest.fixture
-def test_clip_lower(ray_df, pandas_df):
+@pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
+@pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
+def test_clip_lower(ray_df, pandas_df, axis):
     # set bounds
     lower = 2
     lower_0 = [0, 14, 6, 1]
 
     # test lower scalar bound
-    assert ray_df_equals_pandas(ray_df.clip_lower(lower), pandas_df.clip_lower(lower))
+    ray_result = ray_df.clip_lower(lower, axis=axis)
+    pandas_result = pandas_df.clip_lower(lower, axis=axis)
+    assert df_equals(modin_result, pandas_result)
+
     # test lower list bound on each column
-    assert ray_df_equals_pandas(
-        ray_df.clip_lower(lower_0, axis=0), pandas_df.clip_lower(lower_0, axis=0)
-    )
+    ray_result = ray_df.clip_lower(lower_0, axis=axis)
+    pandas_result = pandas_df.clip_lower(lower_0, axis=axis)
+    assert df_equals(modin_result, pandas_result)
 
 
-@pytest.fixture
-def test_clip_upper(ray_df, pandas_df):
+@pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
+@pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
+def test_clip_upper(ray_df, pandas_df, axis):
     # set bounds
     upper = 9
     upper_0 = [12, 1, 10, 7]
 
     # test upper scalar bound
-    assert ray_df_equals_pandas(ray_df.clip_upper(upper), pandas_df.clip_upper(upper))
+    ray_result = ray_df.clip_upper(upper, axis=axis)
+    pandas_result = pandas_df.clip_upper(upper, axis=axis)
+    assert df_equals(modin_result, pandas_result)
+
     # test upper list bound on each column
-    assert ray_df_equals_pandas(
-        ray_df.clip_upper(upper_0, axis=0), pandas_df.clip_upper(upper_0, axis=0)
-    )
+    ray_result = ray_df.clip_upper(upper_0, axis=axis)
+    pandas_result = pandas_df.clip_upper(upper_0, axis=axis)
+    assert df_equals(modin_result, pandas_result)
 
 
 @pytest.mark.skip(reason="Defaulting to Pandas")
@@ -1287,7 +1300,6 @@ def test_fillna_col_reordering(modin_df, pandas_df):
 """
 TODO: Use this when Arrow issue resolves:
 (https://issues.apache.org/jira/browse/ARROW-2122)
-@pytest.fixture
 def test_fillna_datetime_columns():
     frame_data = {'A': [-1, -2, np.nan],
                   'B': date_range('20130101', periods=3),
