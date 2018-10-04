@@ -337,10 +337,11 @@ def test_get_dtype_counts(modin_df, pandas_df):
 @pytest.mark.parametrize(
     "drop_first", bool_arg_values, ids=arg_keys("drop_first", bool_arg_keys)
 )
-def test_get_dummies(modin_df, pandas_df, dummy_na, drop_first):
-    result = pd.get_dummies(modin_df, dummy_na=dummy_na, drop_first=drop_first)
-    expected = pandas.get_dummies(pandas_df, dummy_na=dummy_na, drop_first=drop_first)
-    assert df_equals(result, expected)
+def test_get_dummies(request, modin_df, pandas_df, dummy_na, drop_first):
+    if "empty_data" not in request.node.name:
+        result = pd.get_dummies(modin_df, dummy_na=dummy_na, drop_first=drop_first)
+        expected = pandas.get_dummies(pandas_df, dummy_na=dummy_na, drop_first=drop_first)
+        assert df_equals(result, expected)
 
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
@@ -352,9 +353,7 @@ def test_get_ftype_counts(modin_df, pandas_df):
 @pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
 @pytest.mark.parametrize("func", agg_func_values, ids=agg_func_keys)
 def test_agg(request, modin_df, pandas_df, axis, func):
-    if name_contains(request.node.name, ["over rows"]) or not name_contains(
-        request.node.name, numeric_agg_funcs
-    ):
+    if "over rows" in request.node.name or not name_contains(request.node.name, numeric_agg_funcs):
         modin_result = modin_df.agg(func, axis)
         pandas_result = pandas_df.agg(func, axis)
         assert df_equals(modin_result, pandas_result)
@@ -367,9 +366,7 @@ def test_agg(request, modin_df, pandas_df, axis, func):
 @pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
 @pytest.mark.parametrize("func", agg_func_values, ids=agg_func_keys)
 def test_aggregate(request, modin_df, pandas_df, func, axis):
-    if name_contains(request.node.name, ["over rows"]) or not name_contains(
-        request.node.name, numeric_agg_funcs
-    ):
+    if "over rows" in request.node.name or not name_contains(request.node.name, numeric_agg_funcs):
         modin_result = modin_df.aggregate(func, axis)
         pandas_result = pandas_df.aggregate(func, axis)
         assert df_equals(modin_result, pandas_result)
@@ -903,12 +900,9 @@ def test_drop_duplicates(modin_df, pandas_df):
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 @pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
 @pytest.mark.parametrize("how", ["any", "all"], ids=["any", "all"])
-@pytest.mark.parametrize(
-    "inplace", bool_arg_values, ids=arg_keys("inplace", bool_arg_keys)
-)
-def test_dropna(modin_df, pandas_df, axis, how, inplace):
-    pandas_result = pandas_df.dropna(axis=axis, how=how, inplace=inplace)
-    modin_result = modin_df.dropna(axis=axis, how=how, inplace=inplace)
+def test_dropna(modin_df, pandas_df, axis, how):
+    modin_result = modin_df.dropna(axis=axis, how=how)
+    pandas_result = pandas_df.dropna(axis=axis, how=how)
     assert df_equals(modin_result, pandas_result)
 
 

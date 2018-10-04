@@ -55,7 +55,6 @@ for axis_name, axis in zip(axis_keys, axis_values):
             )
             test_groupby["{}-{}".format(df_name, axis_name)] = vals
 
-<<<<<<< 729ac7d2ac751f1d0e03a22d0b144489323b87d8
 @pytest.fixture
 def ray_df_equals_pandas(ray_df, pandas_df):
     assert isinstance(ray_df, pd.DataFrame)
