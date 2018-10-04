@@ -72,7 +72,9 @@ def test_ray_concat():
     df, df2 = generate_dfs()
     modin_df, modin_df2 = from_pandas(df), from_pandas(df2)
 
-    assert modin_df_equals_pandas(pd.concat([ray_df, modin_df2]), pandas.concat([df, df2]))
+    assert modin_df_equals_pandas(
+        pd.concat([modin_df, modin_df2]), pandas.concat([df, df2])
+    )
 
 
 def test_ray_concat_with_series():
@@ -81,12 +83,12 @@ def test_ray_concat_with_series():
     pandas_series = pandas.Series([1, 2, 3, 4], name="new_col")
 
     assert modin_df_equals_pandas(
-        pd.concat([ray_df, modin_df2, pandas_series], axis=0),
+        pd.concat([modin_df, modin_df2, pandas_series], axis=0),
         pandas.concat([df, df2, pandas_series], axis=0),
     )
 
     assert modin_df_equals_pandas(
-        pd.concat([ray_df, modin_df2, pandas_series], axis=1),
+        pd.concat([modin_df, modin_df2, pandas_series], axis=1),
         pandas.concat([df, df2, pandas_series], axis=1),
     )
 
@@ -96,16 +98,17 @@ def test_ray_concat_on_index():
     modin_df, modin_df2 = from_pandas(df), from_pandas(df2)
 
     assert modin_df_equals_pandas(
-        pd.concat([ray_df, modin_df2], axis="index"),
+        pd.concat([modin_df, modin_df2], axis="index"),
         pandas.concat([df, df2], axis="index"),
     )
 
     assert modin_df_equals_pandas(
-        pd.concat([ray_df, modin_df2], axis="rows"), pandas.concat([df, df2], axis="rows")
+        pd.concat([modin_df, modin_df2], axis="rows"),
+        pandas.concat([df, df2], axis="rows"),
     )
 
     assert modin_df_equals_pandas(
-        pd.concat([ray_df, modin_df2], axis=0), pandas.concat([df, df2], axis=0)
+        pd.concat([modin_df, modin_df2], axis=0), pandas.concat([df, df2], axis=0)
     )
 
 
@@ -114,11 +117,11 @@ def test_ray_concat_on_column():
     modin_df, modin_df2 = from_pandas(df), from_pandas(df2)
 
     assert modin_df_equals_pandas(
-        pd.concat([ray_df, modin_df2], axis=1), pandas.concat([df, df2], axis=1)
+        pd.concat([modin_df, modin_df2], axis=1), pandas.concat([df, df2], axis=1)
     )
 
     assert modin_df_equals_pandas(
-        pd.concat([ray_df, modin_df2], axis="columns"),
+        pd.concat([modin_df, modin_df2], axis="columns"),
         pandas.concat([df, df2], axis="columns"),
     )
 
@@ -128,7 +131,7 @@ def test_invalid_axis_errors():
     modin_df, modin_df2 = from_pandas(df), from_pandas(df2)
 
     with pytest.raises(ValueError):
-        pd.concat([ray_df, modin_df2], axis=2)
+        pd.concat([modin_df, modin_df2], axis=2)
 
 
 def test_mixed_concat():

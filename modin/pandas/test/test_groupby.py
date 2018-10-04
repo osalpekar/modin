@@ -5,17 +5,14 @@ from __future__ import print_function
 import pytest
 import sys
 import pandas
-import numpy as np
 import modin.pandas as pd
-from modin.pandas.utils import from_pandas, to_pandas
 
 from .utils import (
     df_equals,
     name_contains,
     arg_keys,
-    test_dfs_keys,
+    test_data,
     numeric_dfs,
-    test_dfs_values,
     axis_keys,
     axis_values,
     bool_arg_keys,
@@ -43,17 +40,24 @@ if sys.version_info.major < 3:
 # Create test_groupby objects
 test_groupby = dict()
 for axis_name, axis in zip(axis_keys, axis_values):
-    for df_name, dfs in zip(test_dfs_keys, test_dfs_values):
+    for df_name, frame_data in test_data.items():
         if "empty_data" not in df_name and not (
-            axis_name == "over rows" and "columns_only" in df_name
+            "over rows" in axis_name and "columns_only" in df_name
         ):
-            modin_df, pandas_df = dfs
-            index = modin_df.columns if axis_name == "over columns" else modin_df.index
+            modin_df, pandas_df = (
+                pd.DataFrame(frame_data),
+                pandas.DataFrame(frame_data),
+            )
+            index = modin_df.columns if "over columns" in axis_name else modin_df.index
             vals = (
                 modin_df.groupby([str(i) for i in index], axis=axis),
                 pandas_df.groupby([str(i) for i in index], axis=axis),
             )
             test_groupby["{}-{}".format(df_name, axis_name)] = vals
+
+test_groupby_keys = list(test_groupby.keys())
+test_groupby_values = list(test_groupby.values())
+
 
 @pytest.mark.parametrize(
     "modin_groupby, pandas_groupby", test_groupby_values, ids=test_groupby_keys
@@ -183,7 +187,7 @@ def test_ndim(modin_groupby, pandas_groupby):
     "skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys)
 )
 def test_cumsum(request, modin_groupby, pandas_groupby, axis, skipna):
-    if name_contains(request.node.name, numeric_groupby):
+    if name_contains(request.node.name, numeric_dfs):
         modin_result = modin_groupby.cumsum(axis=axis, skipna=skipna)
         pandas_result = pandas_groupby.cumsum(axis=axis, skipna=skipna)
         assert df_equals(modin_result, pandas_result)
@@ -206,7 +210,7 @@ def test_pct_change(modin_groupby, pandas_groupby):
     "skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys)
 )
 def test_cummax(request, modin_groupby, pandas_groupby, axis, skipna):
-    if name_contains(request.node.name, numeric_groupby):
+    if name_contains(request.node.name, numeric_dfs):
         modin_result = modin_groupby.cummax(axis=axis, skipna=skipna)
         pandas_result = pandas_groupby.cummax(axis=axis, skipna=skipna)
         assert df_equals(modin_result, pandas_result)
@@ -297,7 +301,9 @@ def test_idxmin(modin_groupby, pandas_groupby):
 @pytest.mark.parametrize(
     "min_count", int_arg_values, ids=arg_keys("min_count", int_arg_keys)
 )
-def test_prod(modin_groupby, pandas_groupby, axis, skipna, numeric_only, min_count):
+def test_prod(
+    request, modin_groupby, pandas_groupby, axis, skipna, numeric_only, min_count
+):
     if numeric_only or name_contains(request.node.name, numeric_dfs):
         modin_result = modin_groupby.prod(
             axis=axis, skipna=skipna, numeric_only=numeric_only, min_count=min_count
@@ -497,7 +503,7 @@ def test_len(modin_groupby, pandas_groupby):
 def test_sum(
     request, modin_groupby, pandas_groupby, axis, skipna, numeric_only, min_count
 ):
-    if numeric_only or name_contains(request.node.name, numeric_groupbys):
+    if numeric_only or name_contains(request.node.name, numeric_dfs):
         modin_result = modin_groupby.sum(
             axis=axis, skipna=skipna, numeric_only=numeric_only, min_count=min_count
         )
@@ -565,7 +571,7 @@ def test_head(modin_groupby, pandas_groupby, n):
     "skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys)
 )
 def test_cumprod(request, modin_groupby, pandas_groupby, axis, skipna):
-    if name_contains(request.node.name, numeric_groupbys):
+    if name_contains(request.node.name, numeric_dfs):
         modin_result = modin_groupby.cumprod(axis=axis, skipna=skipna)
         pandas_result = pandas_groupby.cumprod(axis=axis, skipna=skipna)
         assert df_equals(modin_result, pandas_result)

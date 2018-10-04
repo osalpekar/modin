@@ -47,6 +47,12 @@ from .utils import (
 # Force matplotlib to not use any Xwindows backend.
 matplotlib.use("Agg")
 
+if sys.version_info[0] < 3:
+    PY2 = True
+else:
+    PY2 = False
+
+
 # Test inter df math functions
 def inter_df_math_helper(op):
     frame_data = {
@@ -340,7 +346,9 @@ def test_get_dtype_counts(modin_df, pandas_df):
 def test_get_dummies(request, modin_df, pandas_df, dummy_na, drop_first):
     if "empty_data" not in request.node.name:
         result = pd.get_dummies(modin_df, dummy_na=dummy_na, drop_first=drop_first)
-        expected = pandas.get_dummies(pandas_df, dummy_na=dummy_na, drop_first=drop_first)
+        expected = pandas.get_dummies(
+            pandas_df, dummy_na=dummy_na, drop_first=drop_first
+        )
         assert df_equals(result, expected)
 
 
@@ -353,7 +361,9 @@ def test_get_ftype_counts(modin_df, pandas_df):
 @pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
 @pytest.mark.parametrize("func", agg_func_values, ids=agg_func_keys)
 def test_agg(request, modin_df, pandas_df, axis, func):
-    if "over rows" in request.node.name or not name_contains(request.node.name, numeric_agg_funcs):
+    if "over rows" in request.node.name or not name_contains(
+        request.node.name, numeric_agg_funcs
+    ):
         modin_result = modin_df.agg(func, axis)
         pandas_result = pandas_df.agg(func, axis)
         assert df_equals(modin_result, pandas_result)
@@ -366,7 +376,9 @@ def test_agg(request, modin_df, pandas_df, axis, func):
 @pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
 @pytest.mark.parametrize("func", agg_func_values, ids=agg_func_keys)
 def test_aggregate(request, modin_df, pandas_df, func, axis):
-    if "over rows" in request.node.name or not name_contains(request.node.name, numeric_agg_funcs):
+    if "over rows" in request.node.name or not name_contains(
+        request.node.name, numeric_agg_funcs
+    ):
         modin_result = modin_df.aggregate(func, axis)
         pandas_result = pandas_df.aggregate(func, axis)
         assert df_equals(modin_result, pandas_result)
@@ -602,8 +614,8 @@ def test_boxplot(modin_df, pandas_df):
 def test_clip(modin_df, pandas_df, axis):
     # set bounds
     lower, upper = 2, 9
-    lower_0 = [0, 14, 6, 1]
-    upper_0 = [12, 1, 10, 7]
+    lower_list = [0, 14, 6, 1]
+    upper_list = [12, 1, 10, 7]
 
     # test only upper scalar bound
     modin_result = modin_df.clip(None, lower, axis=axis)
@@ -616,13 +628,13 @@ def test_clip(modin_df, pandas_df, axis):
     assert df_equals(modin_result, pandas_result)
 
     # test lower and upper list bound on each column
-    modin_result = modin_df.clip(lower_0, upper, axis=axis)
-    pandas_result = pandas_df.clip(lower_0, upper, axis=axis)
+    modin_result = modin_df.clip(lower_list, upper_list, axis=axis)
+    pandas_result = pandas_df.clip(lower_list, upper_list, axis=axis)
     assert df_equals(modin_result, pandas_result)
 
     # test only upper list bound on each column
-    modin_result = modin_df.clip(np.nan, upper, axis=axis)
-    pandas_result = pandas_df.clip(np.nan, upper, axis=axis)
+    modin_result = modin_df.clip(np.nan, upper_list, axis=axis)
+    pandas_result = pandas_df.clip(np.nan, upper_list, axis=axis)
     assert df_equals(modin_result, pandas_result)
 
 
@@ -631,7 +643,7 @@ def test_clip(modin_df, pandas_df, axis):
 def test_clip_lower(modin_df, pandas_df, axis):
     # set bounds
     lower = 2
-    lower_0 = [0, 14, 6, 1]
+    lower_list = [0, 14, 6, 1]
 
     # test lower scalar bound
     modin_result = modin_df.clip_lower(lower, axis=axis)
@@ -639,8 +651,8 @@ def test_clip_lower(modin_df, pandas_df, axis):
     assert df_equals(modin_result, pandas_result)
 
     # test lower list bound on each column
-    modin_result = modin_df.clip_lower(lower_0, axis=axis)
-    pandas_result = pandas_df.clip_lower(lower_0, axis=axis)
+    modin_result = modin_df.clip_lower(lower_list, axis=axis)
+    pandas_result = pandas_df.clip_lower(lower_list, axis=axis)
     assert df_equals(modin_result, pandas_result)
 
 
@@ -649,7 +661,7 @@ def test_clip_lower(modin_df, pandas_df, axis):
 def test_clip_upper(modin_df, pandas_df, axis):
     # set bounds
     upper = 9
-    upper_0 = [12, 1, 10, 7]
+    upper_list = [12, 1, 10, 7]
 
     # test upper scalar bound
     modin_result = modin_df.clip_upper(upper, axis=axis)
@@ -657,8 +669,8 @@ def test_clip_upper(modin_df, pandas_df, axis):
     assert df_equals(modin_result, pandas_result)
 
     # test upper list bound on each column
-    modin_result = modin_df.clip_upper(upper_0, axis=axis)
-    pandas_result = pandas_df.clip_upper(upper_0, axis=axis)
+    modin_result = modin_df.clip_upper(upper_list, axis=axis)
+    pandas_result = pandas_df.clip_upper(upper_list, axis=axis)
     assert df_equals(modin_result, pandas_result)
 
 
@@ -928,7 +940,7 @@ def test_dropna_multiple_axes(modin_df, pandas_df):
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_dropna_multiple_axes_inplace(modin_df, pandas_df):
     modin_df_copy = modin_df.copy()
-    pd_df_copy = pandas_df.copy()
+    pandas_df_copy = pandas_df.copy()
 
     modin_df_copy.dropna(how="all", axis=[0, 1], inplace=True)
     pandas_df_copy.dropna(how="all", axis=[0, 1], inplace=True)
@@ -950,21 +962,21 @@ def test_dropna_subset(request, modin_df, pandas_df):
         column_subset = modin_df.columns[0:2]
         assert df_equals(
             modin_df.dropna(how="all", subset=column_subset),
-            pandas_df.dropna(how="all", subset=column_subset)
+            pandas_df.dropna(how="all", subset=column_subset),
         )
         assert df_equals(
             modin_df.dropna(how="any", subset=column_subset),
-            pandas_df.dropna(how="any", subset=column_subset)
+            pandas_df.dropna(how="any", subset=column_subset),
         )
 
         row_subset = modin_df.index[0:2]
         assert df_equals(
             modin_df.dropna(how="all", axis=1, subset=row_subset),
-            pandas_df.dropna(how="all", axis=1, subset=row_subset)
+            pandas_df.dropna(how="all", axis=1, subset=row_subset),
         )
         assert df_equals(
             modin_df.dropna(how="any", axis=1, subset=row_subset),
-            pandas_df.dropna(how="any", axis=1, subset=row_subset)
+            pandas_df.dropna(how="any", axis=1, subset=row_subset),
         )
 
 
@@ -994,32 +1006,32 @@ def test_duplicated(modin_df, pandas_df):
 
 def test_empty_df():
     df = pd.DataFrame(index=["a", "b"])
-    dt_is_empty(df)
+    df_is_empty(df)
     tm.assert_index_equal(df.index, pd.Index(["a", "b"]))
     assert len(df.columns) == 0
 
     df = pd.DataFrame(columns=["a", "b"])
-    dt_is_empty(df)
+    df_is_empty(df)
     assert len(df.index) == 0
     tm.assert_index_equal(df.columns, pd.Index(["a", "b"]))
 
     df = pd.DataFrame()
-    dt_is_empty(df)
+    df_is_empty(df)
     assert len(df.index) == 0
     assert len(df.columns) == 0
 
     df = pd.DataFrame(index=["a", "b"])
-    dt_is_empty(df)
+    df_is_empty(df)
     tm.assert_index_equal(df.index, pd.Index(["a", "b"]))
     assert len(df.columns) == 0
 
     df = pd.DataFrame(columns=["a", "b"])
-    dt_is_empty(df)
+    df_is_empty(df)
     assert len(df.index) == 0
     tm.assert_index_equal(df.columns, pd.Index(["a", "b"]))
 
     df = pd.DataFrame()
-    dt_is_empty(df)
+    df_is_empty(df)
     assert len(df.index) == 0
     assert len(df.columns) == 0
 
@@ -1052,7 +1064,9 @@ def test_eval_df_use_case():
 
     # Test not inplace assignments
     tmp_pandas = df.eval("e = arctan2(sin(a), b)", engine="python", parser="pandas")
-    tmp_modin = modin_df.eval("e = arctan2(sin(a), b)", engine="python", parser="pandas")
+    tmp_modin = modin_df.eval(
+        "e = arctan2(sin(a), b)", engine="python", parser="pandas"
+    )
     assert df_equals(tmp_modin, tmp_pandas)
 
     # Test inplace assignments
@@ -1325,7 +1339,7 @@ def test_fillna_dict_series(request, modin_df, pandas_df):
 
         assert df_equals(
             modin_df.fillna({col1: 0, col2: 5, col3: 7}),
-            pandas_df.fillna({col1: 0, col2: 5, col3: 7})
+            pandas_df.fillna({col1: 0, col2: 5, col3: 7}),
         )
 
         with pytest.raises(NotImplementedError):
@@ -1359,12 +1373,12 @@ def test_fillna_dataframe():
 def test_fillna_columns(modin_df, pandas_df):
     assert df_equals(
         modin_df.fillna(method="ffill", axis=1),
-        pandas_df.fillna(method="ffill", axis=1)
+        pandas_df.fillna(method="ffill", axis=1),
     )
 
     assert df_equals(
         modin_df.fillna(method="ffill", axis=1),
-        pandas_df.fillna(method="ffill", axis=1)
+        pandas_df.fillna(method="ffill", axis=1),
     )
 
 
@@ -2651,7 +2665,6 @@ def test_sort_index(modin_df, pandas_df, axis, ascending, na_position, sort_rema
     )
     assert df_equals(modin_result, pandas_result)
 
-    modin_df_copy = modin_df.copy()
     modin_df.sort_index(
         axis=axis, ascending=ascending, na_position=na_position, inplace=True
     )
