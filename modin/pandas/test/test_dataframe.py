@@ -946,25 +946,25 @@ def test_dropna_multiple_axes_inplace(modin_df, pandas_df):
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_dropna_subset(request, modin_df, pandas_df):
-    if not name_contains(request.node.name, ["empty_data"]):
+    if "empty_data" not in request.node.name:
         column_subset = modin_df.columns[0:2]
         assert df_equals(
             modin_df.dropna(how="all", subset=column_subset),
-            pandas_df.dropna(how="all", subset=column_subset),
+            pandas_df.dropna(how="all", subset=column_subset)
         )
         assert df_equals(
             modin_df.dropna(how="any", subset=column_subset),
-            pandas_df.dropna(how="any", subset=column_subset),
+            pandas_df.dropna(how="any", subset=column_subset)
         )
 
         row_subset = modin_df.index[0:2]
         assert df_equals(
             modin_df.dropna(how="all", axis=1, subset=row_subset),
-            pandas_df.dropna(how="all", axis=1, subset=row_subset),
+            pandas_df.dropna(how="all", axis=1, subset=row_subset)
         )
         assert df_equals(
             modin_df.dropna(how="any", axis=1, subset=row_subset),
-            pandas_df.dropna(how="any", axis=1, subset=row_subset),
+            pandas_df.dropna(how="any", axis=1, subset=row_subset)
         )
 
 
@@ -1325,7 +1325,7 @@ def test_fillna_dict_series(request, modin_df, pandas_df):
 
         assert df_equals(
             modin_df.fillna({col1: 0, col2: 5, col3: 7}),
-            pandas_df.fillna({col1: 0, col2: 5, col3: 7}),
+            pandas_df.fillna({col1: 0, col2: 5, col3: 7})
         )
 
         with pytest.raises(NotImplementedError):
@@ -1359,12 +1359,12 @@ def test_fillna_dataframe():
 def test_fillna_columns(modin_df, pandas_df):
     assert df_equals(
         modin_df.fillna(method="ffill", axis=1),
-        pandas_df.fillna(method="ffill", axis=1),
+        pandas_df.fillna(method="ffill", axis=1)
     )
 
     assert df_equals(
         modin_df.fillna(method="ffill", axis=1),
-        pandas_df.fillna(method="ffill", axis=1),
+        pandas_df.fillna(method="ffill", axis=1)
     )
 
 
