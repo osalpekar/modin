@@ -24,6 +24,7 @@ from .utils import (
     numeric_dfs,
     test_func_keys,
     test_func_values,
+    numeric_test_funcs,
     query_func_keys,
     query_func_values,
     agg_func_keys,
@@ -254,9 +255,9 @@ def test_abs(request, modin_df, pandas_df):
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_add_prefix(modin_df, pandas_df):
     test_prefix = "TEST"
-    new_ray_df = modin_df.add_prefix(test_prefix)
+    new_modin_df = modin_df.add_prefix(test_prefix)
     new_pandas_df = pandas_df.add_prefix(test_prefix)
-    assert df_equals(new_ray_df.columns, new_pandas_df.columns)
+    assert df_equals(new_modin_df.columns, new_pandas_df.columns)
 
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
@@ -265,10 +266,10 @@ def test_applymap(request, modin_df, pandas_df, testfunc):
     if not name_contains(request.node.name, numeric_test_funcs) or name_contains(
         request.node.name, numeric_dfs
     ):
-        new_ray_df = modin_df.applymap(testfunc)
+        new_modin_df = modin_df.applymap(testfunc)
         new_pandas_df = pandas_df.applymap(testfunc)
 
-        assert df_equals(new_ray_df, new_pandas_df)
+        assert df_equals(new_modin_df, new_pandas_df)
     else:
         with pytest.raises(TypeError):
             modin_df.applymap(testfunc)
@@ -277,10 +278,10 @@ def test_applymap(request, modin_df, pandas_df, testfunc):
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 def test_add_suffix(modin_df, pandas_df):
     test_suffix = "TEST"
-    new_ray_df = modin_df.add_suffix(test_suffix)
+    new_modin_df = modin_df.add_suffix(test_suffix)
     new_pandas_df = pandas_df.add_suffix(test_suffix)
 
-    assert df_equals(new_ray_df.columns, new_pandas_df.columns)
+    assert df_equals(new_modin_df.columns, new_pandas_df.columns)
 
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
@@ -299,10 +300,10 @@ def test_axes(modin_df, pandas_df):
 def test_copy(modin_df, pandas_df):
     # pandas_df is unused but there so there won't be confusing list comprehension
     # stuff in the pytest.mark.parametrize
-    new_ray_df = modin_df.copy()
+    new_modin_df = modin_df.copy()
 
-    assert new_ray_df is not modin_df
-    assert df_equals(modin_df, new_ray_df)
+    assert new_modin_df is not modin_df
+    assert df_equals(modin_df, new_modin_df)
 
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
@@ -585,13 +586,13 @@ def test_bool(modin_df, pandas_df):
         modin_df.__bool__()
 
     single_bool_pandas_df = pandas.DataFrame([True])
-    single_bool_ray_df = pd.DataFrame([True])
+    single_bool_modin_df = pd.DataFrame([True])
 
-    assert single_bool_pandas_df.bool() == single_bool_ray_df.bool()
+    assert single_bool_pandas_df.bool() == single_bool_modin_df.bool()
 
     with pytest.raises(ValueError):
         # __bool__ always raises this error for DataFrames
-        single_bool_ray_df.__bool__()
+        single_bool_modin_df.__bool__()
 
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
@@ -601,65 +602,65 @@ def test_boxplot(modin_df, pandas_df):
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 @pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
-def test_clip(ray_df, pandas_df, axis):
+def test_clip(modin_df, pandas_df, axis):
     # set bounds
     lower, upper = 2, 9
     lower_0 = [0, 14, 6, 1]
     upper_0 = [12, 1, 10, 7]
 
     # test only upper scalar bound
-    ray_result = ray_df.clip(None, lower, axis=axis)
+    modin_result = modin_df.clip(None, lower, axis=axis)
     pandas_result = pandas_df.clip(None, lower, axis=axis)
     assert df_equals(modin_result, pandas_result)
 
     # test lower and upper scalar bound
-    ray_result = ray_df.clip(lower, upper, axis=axis)
+    modin_result = modin_df.clip(lower, upper, axis=axis)
     pandas_result = pandas_df.clip(lower, upper, axis=axis)
     assert df_equals(modin_result, pandas_result)
 
     # test lower and upper list bound on each column
-    ray_result = ray_df.clip(lower_0, upper, axis=axis)
+    modin_result = modin_df.clip(lower_0, upper, axis=axis)
     pandas_result = pandas_df.clip(lower_0, upper, axis=axis)
     assert df_equals(modin_result, pandas_result)
 
     # test only upper list bound on each column
-    ray_result = ray_df.clip(np.nan, upper, axis=axis)
+    modin_result = modin_df.clip(np.nan, upper, axis=axis)
     pandas_result = pandas_df.clip(np.nan, upper, axis=axis)
     assert df_equals(modin_result, pandas_result)
 
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 @pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
-def test_clip_lower(ray_df, pandas_df, axis):
+def test_clip_lower(modin_df, pandas_df, axis):
     # set bounds
     lower = 2
     lower_0 = [0, 14, 6, 1]
 
     # test lower scalar bound
-    ray_result = ray_df.clip_lower(lower, axis=axis)
+    modin_result = modin_df.clip_lower(lower, axis=axis)
     pandas_result = pandas_df.clip_lower(lower, axis=axis)
     assert df_equals(modin_result, pandas_result)
 
     # test lower list bound on each column
-    ray_result = ray_df.clip_lower(lower_0, axis=axis)
+    modin_result = modin_df.clip_lower(lower_0, axis=axis)
     pandas_result = pandas_df.clip_lower(lower_0, axis=axis)
     assert df_equals(modin_result, pandas_result)
 
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 @pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
-def test_clip_upper(ray_df, pandas_df, axis):
+def test_clip_upper(modin_df, pandas_df, axis):
     # set bounds
     upper = 9
     upper_0 = [12, 1, 10, 7]
 
     # test upper scalar bound
-    ray_result = ray_df.clip_upper(upper, axis=axis)
+    modin_result = modin_df.clip_upper(upper, axis=axis)
     pandas_result = pandas_df.clip_upper(upper, axis=axis)
     assert df_equals(modin_result, pandas_result)
 
     # test upper list bound on each column
-    ray_result = ray_df.clip_upper(upper_0, axis=axis)
+    modin_result = modin_df.clip_upper(upper_0, axis=axis)
     pandas_result = pandas_df.clip_upper(upper_0, axis=axis)
     assert df_equals(modin_result, pandas_result)
 
@@ -1050,15 +1051,15 @@ def test_eval_df_use_case():
 
     # test eval for series results
     tmp_pandas = df.eval("arctan2(sin(a), b)", engine="python", parser="pandas")
-    tmp_ray = modin_df.eval("arctan2(sin(a), b)", engine="python", parser="pandas")
+    tmp_modin = modin_df.eval("arctan2(sin(a), b)", engine="python", parser="pandas")
 
-    assert isinstance(tmp_ray, pandas.Series)
-    assert df_equals(tmp_ray, tmp_pandas)
+    assert isinstance(tmp_modin, pandas.Series)
+    assert df_equals(tmp_modin, tmp_pandas)
 
     # Test not inplace assignments
     tmp_pandas = df.eval("e = arctan2(sin(a), b)", engine="python", parser="pandas")
-    tmp_ray = modin_df.eval("e = arctan2(sin(a), b)", engine="python", parser="pandas")
-    assert df_equals(tmp_ray, tmp_pandas)
+    tmp_modin = modin_df.eval("e = arctan2(sin(a), b)", engine="python", parser="pandas")
+    assert df_equals(tmp_modin, tmp_pandas)
 
     # Test inplace assignments
     df.eval("e = arctan2(sin(a), b)", engine="python", parser="pandas", inplace=True)
@@ -1726,7 +1727,7 @@ def test_join():
 
     join_types = ["left", "outer", "inner"]
     for how in join_types:
-        modin_join = modin_df.join([ray_df2, modin_df3], how=how)
+        modin_join = modin_df.join([modin_df2, modin_df3], how=how)
         pandas_join = pandas_df.join([pandas_df2, pandas_df3], how=how)
         assert df_equals(modin_join, pandas_join)
 
@@ -2076,12 +2077,12 @@ def test_plot(modin_df, pandas_df):
 def test_pop(request, modin_df, pandas_df):
     if "empty_data" not in request.node.name:
         key = modin_df.columns[0]
-        temp_ray_df = modin_df.copy()
+        temp_modin_df = modin_df.copy()
         temp_pandas_df = pandas_df.copy()
-        modin_popped = temp_ray_df.pop(key)
+        modin_popped = temp_modin_df.pop(key)
         pandas_popped = temp_pandas_df.pop(key)
         assert df_equals(modin_popped, pandas_popped)
-        assert df_equals(temp_ray_df, temp_pandas_df)
+        assert df_equals(temp_modin_df, temp_pandas_df)
 
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
@@ -2956,7 +2957,7 @@ def test_where():
     modin_cond_df = modin_df % 5 < 2
 
     pandas_result = pandas_df.where(pandas_cond_df, -pandas_df)
-    modin_result = modin_df.where(modin_cond_df, -ray_df)
+    modin_result = modin_df.where(modin_cond_df, -modin_df)
     assert all((to_pandas(modin_result) == pandas_result).all())
 
     other = pandas_df.loc[3]
