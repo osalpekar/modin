@@ -280,4 +280,3 @@ def name_contains(test_name, vals):
         True if a substring in vals is in test_name, else False.
     """
     return any(val in test_name for val in vals)
-
