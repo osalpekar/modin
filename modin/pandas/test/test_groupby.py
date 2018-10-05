@@ -38,7 +38,7 @@ if sys.version_info.major < 3:
     PY2 = True
 
 # Create test_groupby objects
-test_groupby = dict()
+test_groupby = {}
 for axis_name, axis in zip(axis_keys, axis_values):
     for df_name, frame_data in test_data.items():
         if "empty_data" not in df_name and not (
