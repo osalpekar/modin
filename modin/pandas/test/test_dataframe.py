@@ -545,17 +545,32 @@ def test_astype():
 
     modin_df_casted = modin_df.astype(np.int32)
     expected_df_casted = expected_df.astype(np.int32)
-
     assert df_equals(modin_df_casted, expected_df_casted)
 
     modin_df_casted = modin_df.astype(np.float64)
     expected_df_casted = expected_df.astype(np.float64)
-
     assert df_equals(modin_df_casted, expected_df_casted)
 
     modin_df_casted = modin_df.astype(str)
     expected_df_casted = expected_df.astype(str)
+    assert df_equals(modin_df_casted, expected_df_casted)
 
+    dtype_dict = {
+            "A": np.int32,
+            "B": np.int64,
+            "C": str
+            }
+    modin_df_casted = modin_df.astype(dtype_dict)
+    expected_df_casted = expected_df.astype(dtype_dict)
+    assert df_equals(modin_df_casted, expected_df_casted)
+
+    bad_dtype_dict = {
+            "B": np.int32,
+            "B": np.int64,
+            "B": str
+            }
+    modin_df_casted = modin_df.astype(bad_dtype_dict)
+    expected_df_casted = expected_df.astype(bad_dtype_dict)
     assert df_equals(modin_df_casted, expected_df_casted)
 
 
@@ -611,31 +626,32 @@ def test_boxplot(modin_df, pandas_df):
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 @pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
-def test_clip(modin_df, pandas_df, axis):
-    # set bounds
-    lower, upper = 2, 9
-    lower_list = [0, 14, 6, 1]
-    upper_list = [12, 1, 10, 7]
+def test_clip(request, modin_df, pandas_df, axis):
+    if name_contains(request.node.name, numeric_dfs):
+        # set bounds
+        lower, upper = 2, 9
+        lower_list = [0, 14, 6, 1]
+        upper_list = [12, 1, 10, 7]
 
-    # test only upper scalar bound
-    modin_result = modin_df.clip(None, lower, axis=axis)
-    pandas_result = pandas_df.clip(None, lower, axis=axis)
-    assert df_equals(modin_result, pandas_result)
+        # test only upper scalar bound
+        modin_result = modin_df.clip(None, lower, axis=axis)
+        pandas_result = pandas_df.clip(None, lower, axis=axis)
+        assert df_equals(modin_result, pandas_result)
 
-    # test lower and upper scalar bound
-    modin_result = modin_df.clip(lower, upper, axis=axis)
-    pandas_result = pandas_df.clip(lower, upper, axis=axis)
-    assert df_equals(modin_result, pandas_result)
+        # test lower and upper scalar bound
+        modin_result = modin_df.clip(lower, upper, axis=axis)
+        pandas_result = pandas_df.clip(lower, upper, axis=axis)
+        assert df_equals(modin_result, pandas_result)
 
-    # test lower and upper list bound on each column
-    modin_result = modin_df.clip(lower_list, upper_list, axis=axis)
-    pandas_result = pandas_df.clip(lower_list, upper_list, axis=axis)
-    assert df_equals(modin_result, pandas_result)
+        # test lower and upper list bound on each column
+        modin_result = modin_df.clip(lower_list, upper_list, axis=axis)
+        pandas_result = pandas_df.clip(lower_list, upper_list, axis=axis)
+        assert df_equals(modin_result, pandas_result)
 
-    # test only upper list bound on each column
-    modin_result = modin_df.clip(np.nan, upper_list, axis=axis)
-    pandas_result = pandas_df.clip(np.nan, upper_list, axis=axis)
-    assert df_equals(modin_result, pandas_result)
+        # test only upper list bound on each column
+        modin_result = modin_df.clip(np.nan, upper_list, axis=axis)
+        pandas_result = pandas_df.clip(np.nan, upper_list, axis=axis)
+        assert df_equals(modin_result, pandas_result)
 
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
@@ -728,10 +744,15 @@ def test_corrwith(modin_df, pandas_df):
 @pytest.mark.parametrize(
     "numeric_only", bool_arg_values, ids=arg_keys("numeric_only", bool_arg_keys)
 )
-def test_count(modin_df, pandas_df, axis, numeric_only):
-    modin_result = modin_df.count(axis=axis, numeric_only=numeric_only)
-    pandas_result = pandas_df.count(axis=axis, numeric_only=numeric_only)
-    assert df_equals(modin_result, pandas_result)
+def test_count(request, modin_df, pandas_df, axis, numeric_only):
+    if numeric_only or name_contains(request.node.name, numeric_dfs):
+        modin_result = modin_df.count(axis=axis, numeric_only=numeric_only)
+        pandas_result = pandas_df.count(axis=axis, numeric_only=numeric_only)
+        assert df_equals(modin_result, pandas_result)
+    else:
+        with pytest.raises(TypeError):
+            modin_df.count(axis=axis, numeric_only=numeric_only)
+
 
 
 @pytest.mark.skip(reason="Defaulting to Pandas")

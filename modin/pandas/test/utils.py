@@ -6,8 +6,8 @@ from modin.pandas.utils import to_pandas
 # Input data and functions for the tests
 # The test data that we will test our code against
 test_data = {
-    "empty_data": {},
-    "columns_only": {"col1": [], "col2": [], "col3": [], "col4": [], "col5": []},
+    # "empty_data": {},
+    # "columns_only": {"col1": [], "col2": [], "col3": [], "col4": [], "col5": []}, 
     "int_data": {
         "col1": [0, 1, 2, 3],
         "col2": [4, 5, 6, 7],
