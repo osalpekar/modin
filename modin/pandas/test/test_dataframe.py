@@ -15,6 +15,9 @@ from numpy.testing import assert_array_equal
 import sys
 
 from .utils import (
+    random_state,
+    RAND_LOW,
+    RAND_HIGH,
     df_equals,
     df_is_empty,
     arg_keys,
@@ -628,10 +631,11 @@ def test_boxplot(modin_df, pandas_df):
 @pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
 def test_clip(request, modin_df, pandas_df, axis):
     if name_contains(request.node.name, numeric_dfs):
+        ind_len = len(modin_df.index) if axis else len(modin_df.columns)
         # set bounds
-        lower, upper = 2, 9
-        lower_list = [0, 14, 6, 1]
-        upper_list = [12, 1, 10, 7]
+        lower, upper = np.sort(random_state.random_integers(RAND_LOW, RAND_HIGH, 2))
+        lower_list = random_state.random_integers(RAND_LOW, RAND_HIGH, ind_len)
+        upper_list = random_state.random_integers(RAND_LOW, RAND_HIGH, ind_len)
 
         # test only upper scalar bound
         modin_result = modin_df.clip(None, lower, axis=axis)
@@ -879,7 +883,7 @@ def test_drop():
     assert df_equals(modin_nu_df.drop(["X", "Y"], axis=0), nu_df.loc[[], :])
 
     # inplace cache issue
-    frame_data = np.random.randn(10, 3)
+    frame_data = random_state.randn(10, 3)
     df = pandas.DataFrame(frame_data, columns=list("abc"))
     modin_df = pd.DataFrame(frame_data, columns=list("abc"))
     expected = df[~(df.b > 0)]
@@ -1072,7 +1076,7 @@ def test_equals():
 
 
 def test_eval_df_use_case():
-    frame_data = {"a": np.random.randn(10), "b": np.random.randn(10)}
+    frame_data = {"a": random_state.randn(10), "b": random_state.randn(10)}
     df = pandas.DataFrame(frame_data)
     modin_df = pd.DataFrame(frame_data)
 
@@ -1100,7 +1104,7 @@ def test_eval_df_use_case():
 
 
 def test_eval_df_arithmetic_subexpression():
-    frame_data = {"a": np.random.randn(10), "b": np.random.randn(10)}
+    frame_data = {"a": random_state.randn(10), "b": random_state.randn(10)}
     df = pandas.DataFrame(frame_data)
     modin_df = pd.DataFrame(frame_data)
     df.eval("not_e = sin(a + b)", engine="python", parser="pandas", inplace=True)
@@ -1264,7 +1268,7 @@ def test_bfill2():
 
 
 def test_fillna_inplace():
-    frame_data = np.random.randn(10, 4)
+    frame_data = random_state.randn(10, 4)
     df = pandas.DataFrame(frame_data)
     df[1][:4] = np.nan
     df[3][-4:] = np.nan
@@ -2978,7 +2982,7 @@ def test_var(modin_df, pandas_df, axis, skipna, numeric_only, ddof):
 
 
 def test_where():
-    frame_data = np.random.randn(100, 10)
+    frame_data = random_state.randn(100, 10)
     pandas_df = pandas.DataFrame(frame_data, columns=list("abcdefghij"))
     modin_df = pd.DataFrame(frame_data, columns=list("abcdefghij"))
     pandas_cond_df = pandas_df % 5 < 2
@@ -3196,22 +3200,22 @@ def test___deepcopy__(modin_df, pandas_df):
 
 
 def test___repr__():
-    frame_data = np.random.randint(0, 100, size=(1000, 100))
+    frame_data = random_state.randint(RAND_LOW, RAND_HIGH, size=(1000, 100))
     pandas_df = pandas.DataFrame(frame_data)
     modin_df = pd.DataFrame(frame_data)
     assert repr(pandas_df) == repr(modin_df)
 
-    frame_data = np.random.randint(0, 100, size=(1000, 99))
+    frame_data = random_state.randint(RAND_LOW, RAND_HIGH, size=(1000, 99))
     pandas_df = pandas.DataFrame(frame_data)
     modin_df = pd.DataFrame(frame_data)
     assert repr(pandas_df) == repr(modin_df)
 
-    frame_data = np.random.randint(0, 100, size=(1000, 101))
+    frame_data = random_state.randint(RAND_LOW, RAND_HIGH, size=(1000, 101))
     pandas_df = pandas.DataFrame(frame_data)
     modin_df = pd.DataFrame(frame_data)
     assert repr(pandas_df) == repr(modin_df)
 
-    frame_data = np.random.randint(0, 100, size=(1000, 102))
+    frame_data = random_state.randint(RAND_LOW, RAND_HIGH, size=(1000, 102))
     pandas_df = pandas.DataFrame(frame_data)
     modin_df = pd.DataFrame(frame_data)
     assert repr(pandas_df) == repr(modin_df)
@@ -3223,21 +3227,21 @@ def test___repr__():
     # and rows>60. The cases that follow exercise the other three
     # combinations.
     # rows <= 60, cols > 20
-    frame_data = np.random.randint(0, 100, size=(10, 100))
+    frame_data = random_state.randint(RAND_LOW, RAND_HIGH, size=(10, 100))
     pandas_df = pandas.DataFrame(frame_data)
     modin_df = pd.DataFrame(frame_data)
 
     assert repr(pandas_df) == repr(modin_df)
 
     # rows <= 60, cols <= 20
-    frame_data = np.random.randint(0, 100, size=(10, 10))
+    frame_data = random_state.randint(RAND_LOW, RAND_HIGH, size=(10, 10))
     pandas_df = pandas.DataFrame(frame_data)
     modin_df = pd.DataFrame(frame_data)
 
     assert repr(pandas_df) == repr(modin_df)
 
     # rows > 60, cols <= 20
-    frame_data = np.random.randint(0, 100, size=(100, 10))
+    frame_data = random_state.randint(RAND_LOW, RAND_HIGH, size=(100, 10))
     pandas_df = pandas.DataFrame(frame_data)
     modin_df = pd.DataFrame(frame_data)
 

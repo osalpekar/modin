@@ -920,9 +920,9 @@ class DataFrame(object):
         axis = numpy_compat.function.validate_clip_with_axis(axis, args, kwargs)
 
         # any np.nan bounds are treated as None
-        if lower and np.any(np.isnan(lower)):
+        if lower is np.nan or (is_list_like(lower) and np.isnan(lower).any()):
             lower = None
-        if upper and np.any(np.isnan(upper)):
+        if upper is np.nan or (is_list_like(upper) and np.isnan(upper).any()):
             upper = None
 
         new_manager = self._data_manager.clip(

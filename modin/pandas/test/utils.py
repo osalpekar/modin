@@ -3,6 +3,10 @@ import pandas
 import modin.pandas as pd
 from modin.pandas.utils import to_pandas
 
+random_state = np.random.RandomState(seed=42)
+RAND_LOW = -100
+RAND_HIGH = 100
+
 # Input data and functions for the tests
 # The test data that we will test our code against
 test_data = {
