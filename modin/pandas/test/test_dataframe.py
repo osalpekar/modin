@@ -753,13 +753,9 @@ def test_corrwith(modin_df, pandas_df):
     "numeric_only", bool_arg_values, ids=arg_keys("numeric_only", bool_arg_keys)
 )
 def test_count(request, modin_df, pandas_df, axis, numeric_only):
-    if numeric_only or name_contains(request.node.name, numeric_dfs):
-        modin_result = modin_df.count(axis=axis, numeric_only=numeric_only)
-        pandas_result = pandas_df.count(axis=axis, numeric_only=numeric_only)
-        df_equals(modin_result, pandas_result)
-    else:
-        with pytest.raises(TypeError):
-            modin_df.count(axis=axis, numeric_only=numeric_only)
+    modin_result = modin_df.count(axis=axis, numeric_only=numeric_only)
+    pandas_result = pandas_df.count(axis=axis, numeric_only=numeric_only)
+    df_equals(modin_result, pandas_result)
 
 
 

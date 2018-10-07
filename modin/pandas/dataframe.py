@@ -1007,9 +1007,6 @@ class DataFrame(object):
         """
         axis = pandas.DataFrame()._get_axis_number(axis) if axis is not None else 0
         
-        if not numeric_only:
-            self._validate_dtypes(numeric_only=True)
-
         result = self._data_manager.count(
             axis=axis, level=level, numeric_only=numeric_only
         )
