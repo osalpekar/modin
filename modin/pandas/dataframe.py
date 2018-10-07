@@ -1008,9 +1008,7 @@ class DataFrame(object):
         axis = pandas.DataFrame()._get_axis_number(axis) if axis is not None else 0
         
         if not numeric_only:
-            for t in self.dtypes:
-                if not is_numeric_dtype(t):
-                    raise TypeError("'{0}' is not a numeric dtype".format(t))
+            self._validate_dtypes(numeric_only=True)
 
         return self._data_manager.count(
             axis=axis, level=level, numeric_only=numeric_only
@@ -1034,6 +1032,10 @@ class DataFrame(object):
         axis = pandas.DataFrame()._get_axis_number(axis) if axis is not None else 0
         if axis:
             self._validate_dtypes()
+<<<<<<< HEAD
+=======
+
+>>>>>>> Fixed tests upto but not including mean
         return DataFrame(
             data_manager=self._data_manager.cummax(axis=axis, skipna=skipna, **kwargs)
         )
@@ -1051,6 +1053,10 @@ class DataFrame(object):
         axis = pandas.DataFrame()._get_axis_number(axis) if axis is not None else 0
         if axis:
             self._validate_dtypes()
+<<<<<<< HEAD
+=======
+
+>>>>>>> Fixed tests upto but not including mean
         return DataFrame(
             data_manager=self._data_manager.cummin(axis=axis, skipna=skipna, **kwargs)
         )
@@ -1067,6 +1073,10 @@ class DataFrame(object):
         """
         axis = pandas.DataFrame()._get_axis_number(axis) if axis is not None else 0
         self._validate_dtypes(numeric_only=True)
+<<<<<<< HEAD
+=======
+
+>>>>>>> Fixed tests upto but not including mean
         return DataFrame(
             data_manager=self._data_manager.cumprod(axis=axis, skipna=skipna, **kwargs)
         )
@@ -1083,6 +1093,10 @@ class DataFrame(object):
         """
         axis = pandas.DataFrame()._get_axis_number(axis) if axis is not None else 0
         self._validate_dtypes(numeric_only=True)
+<<<<<<< HEAD
+=======
+
+>>>>>>> Fixed tests upto but not including mean
         return DataFrame(
             data_manager=self._data_manager.cumsum(axis=axis, skipna=skipna, **kwargs)
         )

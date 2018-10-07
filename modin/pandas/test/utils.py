@@ -1,5 +1,6 @@
 import numpy as np
 import pandas
+from pandas.util.testing import assert_almost_equal, assert_frame_equal
 import modin.pandas as pd
 from modin.pandas.utils import to_pandas
 
@@ -40,7 +41,7 @@ test_data = {
     },
     "int_float_object_data": {
         "col1": [1, 2, 3, 4],
-        "col2": [4, 5, 6, "7"],
+        "col2": [4, 5, 6, 7],
         "col3": [8.0, 9.4, 10.1, 11.3],
         "col4": ["a", "b", "c", "d"],
     },
@@ -214,8 +215,7 @@ def df_equals(df1, df2):
     Returns:
         True if df1 is equal to df2.
     """
-    types_for_equals = (
-        pandas.DataFrame,
+    types_for_almost_equals = (
         pandas.Series,
         pandas.core.indexes.range.RangeIndex,
         pandas.core.indexes.base.Index,
@@ -226,25 +226,22 @@ def df_equals(df1, df2):
 
     groupby_types = (pandas.core.groupby.DataFrameGroupBy, DataFrameGroupBy)
 
+    # Convert to pandas
     if isinstance(df1, pd.DataFrame):
         df1 = to_pandas(df1)
     if isinstance(df2, pd.DataFrame):
         df2 = to_pandas(df2)
 
-    if isinstance(df1, types_for_equals) and isinstance(df2, types_for_equals):
-        try:
-            close = (df1 - df2 < 10 ** -2).all()
-            while isinstance(close, types_for_equals):
-                close = close.all()
-        except Exception:
-            close = False
-        return df1.equals(df2) or close
+    if isinstance(df1, pandas.DataFrame) and isinstance(df2, pandas.DataFrame):
+        assert_frame_equal(df1, df2, check_dtype=False, check_datetimelike_compat=True, check_index_type=False)
+    elif isinstance(df1, types_for_almost_equals) and isinstance(df2, types_for_almost_equals):
+        assert_almost_equal(df1, df2, check_dtype=False)
     elif isinstance(df1, groupby_types) and isinstance(df2, groupby_types):
         for g1, g2 in zip(df1, df2):
             assert g1[0] == g2[0]
             df_equals(g1[1], g2[1])
     else:
-        return df1 == df2
+        assert df1 == df2
 
 
 def df_is_empty(df):
