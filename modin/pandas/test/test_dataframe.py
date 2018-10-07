@@ -1859,13 +1859,9 @@ def test_mask(modin_df, pandas_df):
     "numeric_only", bool_arg_values, ids=arg_keys("numeric_only", bool_arg_keys)
 )
 def test_max(request, modin_df, pandas_df, axis, skipna, numeric_only):
-    # Only run with skipna is true due to https://github.com/numpy/numpy/issues/10370
-    # next condition is for weird pandas behavior because only that case triggers a Type Error
-    if (skipna and not
-            (not numeric_only and skipna and "columns" in request.node.name and "int_float_object_data" in request.node.name)):
-        modin_result = modin_df.max(axis=axis, skipna=skipna, numeric_only=numeric_only)
-        pandas_result = pandas_df.max(axis=axis, skipna=skipna, numeric_only=numeric_only)
-        df_equals(modin_result, pandas_result)
+    modin_result = modin_df.max(axis=axis, skipna=skipna, numeric_only=numeric_only)
+    pandas_result = pandas_df.max(axis=axis, skipna=skipna, numeric_only=numeric_only)
+    df_equals(modin_result, pandas_result)
 
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
@@ -1877,11 +1873,13 @@ def test_max(request, modin_df, pandas_df, axis, skipna, numeric_only):
     "numeric_only", bool_none_arg_values, ids=arg_keys("numeric_only", bool_none_arg_keys),
 )
 def test_mean(request, modin_df, pandas_df, axis, skipna, numeric_only):
-    # Show when skipna is false, everything breaks...
-    if skipna:
+    if name_contains(request.node.name, numeric_dfs) or numeric_only is None or numeric_only:
         modin_result = modin_df.mean(axis=axis, skipna=skipna, numeric_only=numeric_only)
         pandas_result = pandas_df.mean(axis=axis, skipna=skipna, numeric_only=numeric_only)
         df_equals(modin_result, pandas_result)
+    else:
+        with pytest.raises(TypeError):
+            modin_df.mean(axis=axis, skipna=skipna, numeric_only=numeric_only)
 
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)

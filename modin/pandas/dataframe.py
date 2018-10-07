@@ -1010,9 +1010,14 @@ class DataFrame(object):
         if not numeric_only:
             self._validate_dtypes(numeric_only=True)
 
-        return self._data_manager.count(
+        result = self._data_manager.count(
             axis=axis, level=level, numeric_only=numeric_only
         )
+        
+        if isinstance(result, pandas.Series):
+            return result.fillna(0)
+        else:
+            return result
 
     def cov(self, min_periods=None):
         return self._default_to_pandas_func(
@@ -1032,10 +1037,6 @@ class DataFrame(object):
         axis = pandas.DataFrame()._get_axis_number(axis) if axis is not None else 0
         if axis:
             self._validate_dtypes()
-<<<<<<< HEAD
-=======
-
->>>>>>> Fixed tests upto but not including mean
         return DataFrame(
             data_manager=self._data_manager.cummax(axis=axis, skipna=skipna, **kwargs)
         )
@@ -1053,10 +1054,6 @@ class DataFrame(object):
         axis = pandas.DataFrame()._get_axis_number(axis) if axis is not None else 0
         if axis:
             self._validate_dtypes()
-<<<<<<< HEAD
-=======
-
->>>>>>> Fixed tests upto but not including mean
         return DataFrame(
             data_manager=self._data_manager.cummin(axis=axis, skipna=skipna, **kwargs)
         )
@@ -1073,10 +1070,6 @@ class DataFrame(object):
         """
         axis = pandas.DataFrame()._get_axis_number(axis) if axis is not None else 0
         self._validate_dtypes(numeric_only=True)
-<<<<<<< HEAD
-=======
-
->>>>>>> Fixed tests upto but not including mean
         return DataFrame(
             data_manager=self._data_manager.cumprod(axis=axis, skipna=skipna, **kwargs)
         )
@@ -1093,10 +1086,6 @@ class DataFrame(object):
         """
         axis = pandas.DataFrame()._get_axis_number(axis) if axis is not None else 0
         self._validate_dtypes(numeric_only=True)
-<<<<<<< HEAD
-=======
-
->>>>>>> Fixed tests upto but not including mean
         return DataFrame(
             data_manager=self._data_manager.cumsum(axis=axis, skipna=skipna, **kwargs)
         )
@@ -2216,8 +2205,10 @@ class DataFrame(object):
             The mean of the DataFrame. (Pandas series)
         """
         axis = pandas.DataFrame()._get_axis_number(axis) if axis is not None else 0
+
         if numeric_only is not None and not numeric_only:
             self._validate_dtypes(numeric_only=True)
+
         return self._data_manager.mean(
             axis=axis, skipna=skipna, level=level, numeric_only=numeric_only, **kwargs
         )
