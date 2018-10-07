@@ -413,10 +413,7 @@ class DataFrame(object):
         Returns:
             A new DataFrame with the applied absolute value.
         """
-        for t in self.dtypes:
-            if not is_numeric_dtype(t):
-                raise TypeError("bad operand type for abs():", t)
-
+        self._validate_dtypes(numeric_only=True)
         return DataFrame(data_manager=self._data_manager.abs())
 
     def isin(self, values):
