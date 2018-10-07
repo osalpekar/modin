@@ -1004,14 +1004,9 @@ class DataFrame(object):
         """
         axis = pandas.DataFrame()._get_axis_number(axis) if axis is not None else 0
         
-        result = self._data_manager.count(
+        return self._data_manager.count(
             axis=axis, level=level, numeric_only=numeric_only
-        )
-        
-        if isinstance(result, pandas.Series):
-            return result.fillna(0)
-        else:
-            return result
+        ).fillna(0)
 
     def cov(self, min_periods=None):
         return self._default_to_pandas_func(
