@@ -1888,12 +1888,16 @@ def test_mean(request, modin_df, pandas_df, axis, skipna, numeric_only):
     bool_none_arg_values,
     ids=arg_keys("numeric_only", bool_none_arg_keys),
 )
-def test_median(modin_df, pandas_df, axis, skipna, numeric_only):
-    modin_result = modin_df.median(axis=axis, skipna=skipna, numeric_only=numeric_only)
-    pandas_result = pandas_df.median(
-        axis=axis, skipna=skipna, numeric_only=numeric_only
-    )
-    df_equals(modin_result, pandas_result)
+def test_median(request, modin_df, pandas_df, axis, skipna, numeric_only):
+    if name_contains(request.node.name, numeric_dfs) or numeric_only is None or numeric_only:
+        modin_result = modin_df.median(axis=axis, skipna=skipna, numeric_only=numeric_only)
+        pandas_result = pandas_df.median(
+            axis=axis, skipna=skipna, numeric_only=numeric_only
+        )
+        df_equals(modin_result, pandas_result)
+    else:
+        with pytest.raises(TypeError):
+            modin_df.median(axis=axis, skipna=skipna, numeric_only=numeric_only)
 
 @pytest.mark.skip(reason="Defaulting to Pandas")
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)

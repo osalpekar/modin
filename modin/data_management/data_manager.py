@@ -184,9 +184,6 @@ class PandasDataManager(object):
         """
         result = None
         data_manager = self
-        # If no numeric columns and over columns, then return empty Series
-        if not axis and len(self.index) == 0:
-            result = pandas.Series(dtype=np.int64)
 
         nonnumeric = [
             col
@@ -194,9 +191,10 @@ class PandasDataManager(object):
             if not is_numeric_dtype(dtype)
         ]
         if len(nonnumeric) == len(self.columns):
-            # If over rows and no numeric columns, return this
             if axis:
                 result = pandas.Series([np.nan for _ in self.index])
+            else:
+                result = pandas.Series(dtype=np.float64)
         else:
             data_manager = self.drop(columns=nonnumeric)
         return result, data_manager
