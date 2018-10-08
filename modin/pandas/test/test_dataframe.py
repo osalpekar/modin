@@ -2005,15 +2005,16 @@ def test_min(modin_df, pandas_df, axis, skipna, numeric_only):
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 @pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
 @pytest.mark.parametrize(
-    "skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys)
-)
-@pytest.mark.parametrize(
     "numeric_only", bool_arg_values, ids=arg_keys("numeric_only", bool_arg_keys)
 )
-def test_mode(modin_df, pandas_df, axis, skipna, numeric_only):
-    modin_result = modin_df.mode(axis=axis, skipna=skipna, numeric_only=numeric_only)
-    pandas_result = pandas_df.mode(axis=axis, skipna=skipna, numeric_only=numeric_only)
-    df_equals(modin_result, pandas_result)
+def test_mode(request, modin_df, pandas_df, axis, numeric_only):
+    if numeric_only or name_contains(request.node.name, numeric_dfs):
+        modin_result = modin_df.mode(axis=axis, numeric_only=numeric_only)
+        pandas_result = pandas_df.mode(axis=axis, numeric_only=numeric_only)
+        df_equals(modin_result, pandas_result)
+    else:
+        with pytest.raises(TypeError):
+            modin_df.mode(axis=axis, numeric_only=numeric_only)
 
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
