@@ -1244,20 +1244,6 @@ class PandasDataManager(object):
 
         return self.index[first_result.max()]
 
-    def median(self, **kwargs):
-        """Returns median of each column or row.
-
-        Returns:
-            Series containing the median of each column or row.
-        """
-        # Pandas default is 0 (though not mentioned in docs)
-        axis = kwargs.get("axis", 0)
-        result, data_manager = self.numeric_function_clean_dataframe(axis)
-        if result is not None:
-            return result
-        func = self._prepare_method(pandas.DataFrame.median, **kwargs)
-        return data_manager.full_axis_reduce(func, axis)
-
     def memory_usage(self, **kwargs):
         """Returns the memory usage of each column.
 
@@ -1281,6 +1267,105 @@ class PandasDataManager(object):
         axis = kwargs.get("axis", 0)
         func = self._prepare_method(pandas.DataFrame.nunique, **kwargs)
         return self.full_axis_reduce(func, axis)
+
+    def to_datetime(self, **kwargs):
+        """Converts the Manager to a Series of DateTime objects.
+
+        Returns:
+            Series of DateTime objects.
+        """
+        columns = self.columns
+
+        def to_datetime_builder(df, **kwargs):
+            df.columns = columns
+            return pandas.to_datetime(df, **kwargs)
+
+        func = self._prepare_method(to_datetime_builder, **kwargs)
+        return self.full_axis_reduce(func, 1)
+
+    # END Column/Row partitions reduce operations
+
+    # Column/Row partitions reduce operations over select indices
+    #
+    # These operations result in a reduced dimensionality of data.
+    # Currently, this means a Pandas Series will be returned, but in the future
+    # we will implement a Distributed Series, and this will be returned
+    # instead.
+    def full_axis_reduce_along_select_indices(
+        self, func, axis, index, pandas_result=True
+    ):
+        """Reduce Manger along select indices using function that needs full axis.
+
+        Args:
+            func: Callable that reduces Manager to Series using full knowledge of an
+                axis.
+            axis: 0 for columns and 1 for rows. Defaults to 0.
+            index: Index of the resulting series.
+            pandas_result: Return the result as a Pandas Series instead of raw data.
+
+        Returns:
+            Either a Pandas Series with index or BlockPartitions object.
+        """
+        # Convert indices to numeric indices
+        old_index = self.index if axis else self.columns
+        numeric_indices = [i for i, name in enumerate(old_index) if name in index]
+        result = self.data.apply_func_to_select_indices_along_full_axis(
+            axis, func, numeric_indices
+        )
+        if pandas_result:
+            result = result.to_pandas(self._is_transposed)
+            result.index = index
+        return result
+
+    def describe(self, **kwargs):
+        """Generates descriptive statistics.
+
+        Returns:
+            DataFrame object containing the descriptive statistics of the DataFrame.
+        """
+        # Only describe numeric if there are numeric
+        # Otherwise, describe all
+        columns_for_describe = self.numeric_columns()
+        if len(columns_for_describe) != 0 and "object" in kwargs["exclude"]:
+            numeric = True
+        else:
+            numeric = False
+            # If no numeric dtypes, then do all
+            columns_for_describe = self.columns
+
+        def describe_builder(df, **kwargs):
+            return pandas.DataFrame.describe(df, **kwargs)
+
+        # Apply describe and update indices, columns, and dtypes
+        func = self._prepare_method(describe_builder, **kwargs)
+        new_data = self.full_axis_reduce_along_select_indices(
+            func, 0, columns_for_describe, False
+        )
+        new_columns = columns_for_describe
+        new_index = self.compute_index(0, new_data, False)
+        if numeric:
+            new_dtypes = pandas.Series(
+                [np.float64 for _ in new_columns], index=new_columns
+            )
+        else:
+            new_dtypes = pandas.Series(
+                [np.object for _ in new_columns], index=new_columns
+            )
+        return self.__constructor__(new_data, new_index, new_columns, new_dtypes)
+
+    def median(self, **kwargs):
+        """Returns median of each column or row.
+
+        Returns:
+            Series containing the median of each column or row.
+        """
+        # Pandas default is 0 (though not mentioned in docs)
+        axis = kwargs.get("axis", 0)
+        result, data_manager = self.numeric_function_clean_dataframe(axis)
+        if result is not None:
+            return result
+        func = self._prepare_method(pandas.DataFrame.median, **kwargs)
+        return data_manager.full_axis_reduce(func, axis)
 
     def quantile_for_single_value(self, **kwargs):
         """Returns quantile of each column or row.

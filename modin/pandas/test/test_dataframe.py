@@ -25,6 +25,7 @@ from .utils import (
     test_dfs_keys,
     test_dfs_values,
     numeric_dfs,
+    no_numeric_dfs,
     test_func_keys,
     test_func_values,
     numeric_test_funcs,
@@ -2107,13 +2108,14 @@ def test_pivot_table(modin_df, pandas_df):
 
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
-def test_plot(modin_df, pandas_df):
-    # We have to test this way because equality in plots means same object.
-    zipped_plot_lines = zip(modin_df.plot().lines, to_pandas(modin_df).plot().lines)
+def test_plot(request, modin_df, pandas_df):
+    if name_contains(request.node.name, numeric_dfs):
+        # We have to test this way because equality in plots means same object.
+        zipped_plot_lines = zip(modin_df.plot().lines, to_pandas(modin_df).plot().lines)
 
-    for l, r in zipped_plot_lines:
-        assert np.array_equal(l.get_xdata(), r.get_xdata())
-        assert np.array_equal(l.get_ydata(), r.get_ydata())
+        for l, r in zipped_plot_lines:
+            assert np.array_equal(l.get_xdata(), r.get_xdata())
+            assert np.array_equal(l.get_ydata(), r.get_ydata())
 
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
@@ -2140,7 +2142,7 @@ def test_pop(request, modin_df, pandas_df):
     "min_count", int_arg_values, ids=arg_keys("min_count", int_arg_keys)
 )
 def test_prod(request, modin_df, pandas_df, axis, skipna, numeric_only, min_count):
-    if numeric_only or name_contains(request.node.name, numeric_dfs):
+    if numeric_only or not name_contains(request.node.name, no_numeric_dfs):
         modin_result = modin_df.prod(
             axis=axis, skipna=skipna, numeric_only=numeric_only, min_count=min_count
         )

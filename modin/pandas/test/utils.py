@@ -98,6 +98,10 @@ numeric_dfs = [
     "100x100"
 ]
 
+no_numeric_dfs = [
+        "datetime_timedelta_data"
+        ]
+
 # Test functions for applymap
 test_func = {
     "plus one": lambda x: x + 1,
