@@ -78,6 +78,7 @@ test_data = {
         "col4": "foo",
         "col5": True,
     },
+    "100x100": {"col{}".format(i+1): random_state.randint(RAND_LOW, RAND_HIGH, size=(100)) for i in range(100)},
 }
 
 test_dfs = {
@@ -94,6 +95,7 @@ numeric_dfs = [
     "float_data",
     "sparse_nan_data",
     "dense_nan_data",
+    "100x100"
 ]
 
 # Test functions for applymap
