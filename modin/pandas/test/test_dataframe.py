@@ -1852,7 +1852,9 @@ def test_mask(modin_df, pandas_df):
     "skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys)
 )
 @pytest.mark.parametrize(
-    "numeric_only", bool_arg_values, ids=arg_keys("numeric_only", bool_arg_keys)
+    "numeric_only",
+    bool_none_arg_values,
+    ids=arg_keys("numeric_only", bool_none_arg_keys),
 )
 def test_max(request, modin_df, pandas_df, axis, skipna, numeric_only):
     modin_result = modin_df.max(axis=axis, skipna=skipna, numeric_only=numeric_only)
@@ -2667,10 +2669,14 @@ def test_size(modin_df, pandas_df):
     bool_none_arg_values,
     ids=arg_keys("numeric_only", bool_none_arg_keys),
 )
-def test_skew(modin_df, pandas_df, axis, skipna, numeric_only):
-    modin_result = modin_df.skew(axis=axis, skipna=skipna, numeric_only=numeric_only)
-    pandas_result = pandas_df.skew(axis=axis, skipna=skipna, numeric_only=numeric_only)
-    df_equals(modin_result, pandas_result)
+def test_skew(request, modin_df, pandas_df, axis, skipna, numeric_only):
+    if name_contains(request.node.name, numeric_dfs) or numeric_only is None or numeric_only:
+        modin_result = modin_df.skew(axis=axis, skipna=skipna, numeric_only=numeric_only)
+        pandas_result = pandas_df.skew(axis=axis, skipna=skipna, numeric_only=numeric_only)
+        df_equals(modin_result, pandas_result)
+    else:
+        with pytest.raises(TypeError):
+            modin_df.skew(axis=axis, skipna=skipna, numeric_only=numeric_only)
 
 @pytest.mark.skip(reason="Defaulting to Pandas")
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
@@ -2789,14 +2795,18 @@ def test_stack(modin_df, pandas_df):
     ids=arg_keys("numeric_only", bool_none_arg_keys),
 )
 @pytest.mark.parametrize("ddof", int_arg_values, ids=arg_keys("ddof", int_arg_keys))
-def test_std(modin_df, pandas_df, axis, skipna, numeric_only, ddof):
-    modin_result = modin_df.std(
-        axis=axis, skipna=skipna, numeric_only=numeric_only, ddof=ddof
-    )
-    pandas_result = pandas_df.std(
-        axis=axis, skipna=skipna, numeric_only=numeric_only, ddof=ddof
-    )
-    df_equals(modin_result, pandas_result)
+def test_std(request, modin_df, pandas_df, axis, skipna, numeric_only, ddof):
+    if name_contains(request.node.name, numeric_dfs) or numeric_only is None or numeric_only:
+        modin_result = modin_df.std(
+            axis=axis, skipna=skipna, numeric_only=numeric_only, ddof=ddof
+        )
+        pandas_result = pandas_df.std(
+            axis=axis, skipna=skipna, numeric_only=numeric_only, ddof=ddof
+        )
+        df_equals(modin_result, pandas_result)
+    else:
+        with pytest.raises(TypeError):
+            modin_df.std(axis=axis, skipna=skipna, numeric_only=numeric_only, ddof=ddof)
 
 
 @pytest.mark.skip(reason="Defaulting to Pandas")
@@ -2978,14 +2988,18 @@ def test_values(modin_df, pandas_df):
     ids=arg_keys("numeric_only", bool_none_arg_keys),
 )
 @pytest.mark.parametrize("ddof", int_arg_values, ids=arg_keys("ddof", int_arg_keys))
-def test_var(modin_df, pandas_df, axis, skipna, numeric_only, ddof):
-    modin_result = modin_df.var(
-        axis=axis, skipna=skipna, numeric_only=numeric_only, ddof=ddof
-    )
-    pandas_result = pandas_df.var(
-        axis=axis, skipna=skipna, numeric_only=numeric_only, ddof=ddof
-    )
-    df_equals(modin_result, pandas_result)
+def test_var(request, modin_df, pandas_df, axis, skipna, numeric_only, ddof):
+    if name_contains(request.node.name, numeric_dfs) or numeric_only is None or numeric_only:
+        modin_result = modin_df.var(
+            axis=axis, skipna=skipna, numeric_only=numeric_only, ddof=ddof
+        )
+        pandas_result = pandas_df.var(
+            axis=axis, skipna=skipna, numeric_only=numeric_only, ddof=ddof
+        )
+        df_equals(modin_result, pandas_result)
+    else:
+        with pytest.raises(TypeError):
+            modin_df.var(axis=axis, skipna=skipna, numeric_only=numeric_only, ddof=ddof)
 
 
 def test_where():
