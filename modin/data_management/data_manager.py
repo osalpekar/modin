@@ -1310,6 +1310,34 @@ class PandasDataManager(object):
         result.name = q
         return result
 
+    def quantile_for_single_value(self, **kwargs):
+        """Returns quantile of each column or row.
+
+        Returns:
+            Series containing the quantile of each column or row.
+        """
+        axis = kwargs.get("axis", 0)
+        q = kwargs.get("q", 0.5)
+        numeric_only = kwargs.get("numeric_only", True)
+        assert type(q) is float
+        if numeric_only:
+            result, data_manager = self.numeric_function_clean_dataframe(axis)
+            if result is not None:
+                return result
+        else:
+            data_manager = self
+
+        def quantile_builder(df, **kwargs):
+            try:
+                return pandas.DataFrame.quantile(df, **kwargs)
+            except ValueError:
+                return pandas.Series()
+
+        func = self._prepare_method(quantile_builder, **kwargs)
+        result = data_manager.full_axis_reduce(func, axis)
+        result.name = q
+        return result
+
     def skew(self, **kwargs):
         """Returns skew of each column or row.
 
