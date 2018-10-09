@@ -632,15 +632,15 @@ def test_boxplot(modin_df, pandas_df):
 @pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
 def test_clip(request, modin_df, pandas_df, axis):
     if name_contains(request.node.name, numeric_dfs):
-        ind_len = len(modin_df.index) if axis else len(modin_df.columns)
+        ind_len = len(modin_df.columns) if axis == 1 or axis == 'columns' else len(modin_df.index)
         # set bounds
         lower, upper = np.sort(random_state.random_integers(RAND_LOW, RAND_HIGH, 2))
         lower_list = random_state.random_integers(RAND_LOW, RAND_HIGH, ind_len)
         upper_list = random_state.random_integers(RAND_LOW, RAND_HIGH, ind_len)
 
         # test only upper scalar bound
-        modin_result = modin_df.clip(None, lower, axis=axis)
-        pandas_result = pandas_df.clip(None, lower, axis=axis)
+        modin_result = modin_df.clip(None, upper, axis=axis)
+        pandas_result = pandas_df.clip(None, upper, axis=axis)
         df_equals(modin_result, pandas_result)
 
         # test lower and upper scalar bound
