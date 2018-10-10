@@ -238,6 +238,11 @@ def df_equals(df1, df2):
     if isinstance(df2, pd.DataFrame):
         df2 = to_pandas(df2)
 
+    if (df1.empty and not df2.empty) or (df2.empty and not df1.empty):
+        return False
+    if df1.empty and df2.empty and type(df1) != type(df2):
+        return False
+
     if isinstance(df1, pandas.DataFrame) and isinstance(df2, pandas.DataFrame):
         assert_frame_equal(df1, df2, check_dtype=False, check_datetimelike_compat=True, check_index_type=False)
     elif isinstance(df1, types_for_almost_equals) and isinstance(df2, types_for_almost_equals):
@@ -246,6 +251,9 @@ def df_equals(df1, df2):
         for g1, g2 in zip(df1, df2):
             assert g1[0] == g2[0]
             df_equals(g1[1], g2[1])
+    elif df1.empty and df2.empty and isinstance(df1, pandas.Series) and isinstance(df2, pandas.Series):
+        assert all(df1.index == df2.index)
+        assert df1.dtypes == df2.dtypes
     else:
         assert df1 == df2
 
