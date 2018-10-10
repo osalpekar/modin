@@ -411,6 +411,11 @@ def test_all(modin_df, pandas_df, axis, skipna, bool_only):
     pandas_result = pandas_df.all(axis=axis, skipna=skipna, bool_only=bool_only)
     df_equals(modin_result, pandas_result)
 
+    # Test when axis is None. This will get repeated but easier than using list in parameterize decorator
+    modin_result = modin_df.all(axis=None, skipna=skipna, bool_only=bool_only)
+    pandas_result = pandas_df.all(axis=None, skipna=skipna, bool_only=bool_only)
+    df_equals(modin_result, pandas_result)
+
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
 @pytest.mark.parametrize("axis", axis_values, ids=axis_keys)
@@ -423,6 +428,11 @@ def test_all(modin_df, pandas_df, axis, skipna, bool_only):
 def test_any(modin_df, pandas_df, axis, skipna, bool_only):
     modin_result = modin_df.any(axis=axis, skipna=skipna, bool_only=bool_only)
     pandas_result = pandas_df.any(axis=axis, skipna=skipna, bool_only=bool_only)
+    df_equals(modin_result, pandas_result)
+
+    # Test when axis is None. This will get repeated but easier than using list in parameterize decorator
+    modin_result = modin_df.any(axis=None, skipna=skipna, bool_only=bool_only)
+    pandas_result = pandas_df.any(axis=None, skipna=skipna, bool_only=bool_only)
     df_equals(modin_result, pandas_result)
 
 
