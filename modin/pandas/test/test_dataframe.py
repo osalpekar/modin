@@ -42,8 +42,6 @@ from .utils import (
     axis_values,
     bool_arg_keys,
     bool_arg_values,
-    bool_none_arg_keys,
-    bool_none_arg_values,
     int_arg_keys,
     int_arg_values,
 )
@@ -404,7 +402,7 @@ def test_align(modin_df, pandas_df):
     "skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys)
 )
 @pytest.mark.parametrize(
-    "bool_only", bool_none_arg_values, ids=arg_keys("bool_only", bool_none_arg_keys)
+    "bool_only", bool_arg_values, ids=arg_keys("bool_only", bool_arg_keys)
 )
 def test_all(modin_df, pandas_df, axis, skipna, bool_only):
     modin_result = modin_df.all(axis=axis, skipna=skipna, bool_only=bool_only)
@@ -418,7 +416,7 @@ def test_all(modin_df, pandas_df, axis, skipna, bool_only):
     "skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys)
 )
 @pytest.mark.parametrize(
-    "bool_only", bool_none_arg_values, ids=arg_keys("bool_only", bool_none_arg_keys)
+    "bool_only", bool_arg_values, ids=arg_keys("bool_only", bool_arg_keys)
 )
 def test_any(modin_df, pandas_df, axis, skipna, bool_only):
     modin_result = modin_df.any(axis=axis, skipna=skipna, bool_only=bool_only)
@@ -1854,8 +1852,8 @@ def test_mask(modin_df, pandas_df):
 )
 @pytest.mark.parametrize(
     "numeric_only",
-    bool_none_arg_values,
-    ids=arg_keys("numeric_only", bool_none_arg_keys),
+    bool_arg_values,
+    ids=arg_keys("numeric_only", bool_arg_keys),
 )
 def test_max(request, modin_df, pandas_df, axis, skipna, numeric_only):
     modin_result = modin_df.max(axis=axis, skipna=skipna, numeric_only=numeric_only)
@@ -1869,7 +1867,7 @@ def test_max(request, modin_df, pandas_df, axis, skipna, numeric_only):
     "skipna", bool_arg_values, ids=arg_keys("skipna", bool_arg_keys)
 )
 @pytest.mark.parametrize(
-    "numeric_only", bool_none_arg_values, ids=arg_keys("numeric_only", bool_none_arg_keys),
+    "numeric_only", bool_arg_values, ids=arg_keys("numeric_only", bool_arg_keys),
 )
 def test_mean(request, modin_df, pandas_df, axis, skipna, numeric_only):
     if name_contains(request.node.name, numeric_dfs) or numeric_only is None or numeric_only:
@@ -1888,8 +1886,8 @@ def test_mean(request, modin_df, pandas_df, axis, skipna, numeric_only):
 )
 @pytest.mark.parametrize(
     "numeric_only",
-    bool_none_arg_values,
-    ids=arg_keys("numeric_only", bool_none_arg_keys),
+    bool_arg_values,
+    ids=arg_keys("numeric_only", bool_arg_keys),
 )
 def test_median(request, modin_df, pandas_df, axis, skipna, numeric_only):
     if name_contains(request.node.name, numeric_dfs) or numeric_only is None or numeric_only:
@@ -1994,8 +1992,8 @@ def test_merge():
 )
 @pytest.mark.parametrize(
     "numeric_only",
-    bool_none_arg_values,
-    ids=arg_keys("numeric_only", bool_none_arg_keys),
+    bool_arg_values,
+    ids=arg_keys("numeric_only", bool_arg_keys),
 )
 def test_min(modin_df, pandas_df, axis, skipna, numeric_only):
     modin_result = modin_df.min(axis=axis, skipna=skipna, numeric_only=numeric_only)
@@ -2211,8 +2209,8 @@ def test_query(request, modin_df, pandas_df, funcs):
 )
 @pytest.mark.parametrize(
     "numeric_only",
-    bool_none_arg_values,
-    ids=arg_keys("numeric_only", bool_none_arg_keys),
+    bool_arg_values,
+    ids=arg_keys("numeric_only", bool_arg_keys),
 )
 @pytest.mark.parametrize(
     "na_option", ["keep", "top", "bottom"], ids=["keep", "top", "bottom"]
@@ -2669,8 +2667,8 @@ def test_size(modin_df, pandas_df):
 )
 @pytest.mark.parametrize(
     "numeric_only",
-    bool_none_arg_values,
-    ids=arg_keys("numeric_only", bool_none_arg_keys),
+    bool_arg_values,
+    ids=arg_keys("numeric_only", bool_arg_keys),
 )
 def test_skew(request, modin_df, pandas_df, axis, skipna, numeric_only):
     if name_contains(request.node.name, numeric_dfs) or numeric_only is None or numeric_only:
@@ -2794,8 +2792,8 @@ def test_stack(modin_df, pandas_df):
 )
 @pytest.mark.parametrize(
     "numeric_only",
-    bool_none_arg_values,
-    ids=arg_keys("numeric_only", bool_none_arg_keys),
+    bool_arg_values,
+    ids=arg_keys("numeric_only", bool_arg_keys),
 )
 @pytest.mark.parametrize("ddof", int_arg_values, ids=arg_keys("ddof", int_arg_keys))
 def test_std(request, modin_df, pandas_df, axis, skipna, numeric_only, ddof):
@@ -2987,8 +2985,8 @@ def test_values(modin_df, pandas_df):
 )
 @pytest.mark.parametrize(
     "numeric_only",
-    bool_none_arg_values,
-    ids=arg_keys("numeric_only", bool_none_arg_keys),
+    bool_arg_values,
+    ids=arg_keys("numeric_only", bool_arg_keys),
 )
 @pytest.mark.parametrize("ddof", int_arg_values, ids=arg_keys("ddof", int_arg_keys))
 def test_var(request, modin_df, pandas_df, axis, skipna, numeric_only, ddof):

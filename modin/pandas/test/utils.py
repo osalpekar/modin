@@ -192,19 +192,16 @@ axis = {
     "over rows str": "rows",
     "over columns int": 1,
     "over columns str": "columns",
+    "None": None
 }
 axis_keys = list(axis.keys())
 axis_values = list(axis.values())
 
-bool_arg = {"True": True, "False": False}
+bool_arg = {"True": True, "False": False, "None": None}
 bool_arg_keys = list(bool_arg.keys())
 bool_arg_values = list(bool_arg.values())
 
-bool_none_arg = {"True": True, "False": False, "None": None}
-bool_none_arg_keys = list(bool_none_arg.keys())
-bool_none_arg_values = list(bool_none_arg.values())
-
-int_arg = {"-5": -5, "-1": -1, "0": 0, "1": 1, "5": 5}
+int_arg = {"-5": -5, "-1": -1, "0": 0, "1": 1, "5": 5, "None": None}
 int_arg_keys = list(int_arg.keys())
 int_arg_values = list(int_arg.values())
 
