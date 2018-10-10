@@ -28,16 +28,16 @@ test_data = {
         "col5": [0.0, 0.0, 0.0, 0.0],
     },
     "sparse_nan_data": {
-        "col1": [1, 2, 3, np.nan],
-        "col2": [4, 5, np.nan, 7],
-        "col3": [8, np.nan, 10, 11],
-        "col4": [np.nan, 13, 14, 15],
+        "col1": [1, 2, 3, np.NaN],
+        "col2": [4, 5, np.NaN, 7],
+        "col3": [8, np.NaN, 10, 11],
+        "col4": [np.NaN, 13, 14, 15],
     },
     "dense_nan_data": {
-        "col1": [np.nan, 2, np.nan, 0],
-        "col2": [3, 4, np.nan, 1],
-        "col3": [np.nan, np.nan, np.nan, 5],
-        "col4": [6, np.nan, np.nan, 10],
+        "col1": [np.NaN, 2, np.NaN, 0],
+        "col2": [3, 4, np.NaN, 1],
+        "col3": [np.NaN, np.NaN, np.NaN, 5],
+        "col4": [6, np.NaN, np.NaN, 10],
     },
     "int_float_object_data": {
         "col1": [1, 2, 3, 4],
@@ -192,16 +192,19 @@ axis = {
     "over rows str": "rows",
     "over columns int": 1,
     "over columns str": "columns",
-    "None": None
 }
 axis_keys = list(axis.keys())
 axis_values = list(axis.values())
 
-bool_arg = {"True": True, "False": False, "None": None}
+bool_arg = {"True": True, "False": False}
 bool_arg_keys = list(bool_arg.keys())
 bool_arg_values = list(bool_arg.values())
 
-int_arg = {"-5": -5, "-1": -1, "0": 0, "1": 1, "5": 5, "None": None}
+bool_none_arg = {"True": True, "False": False, "None": None}
+bool_none_arg_keys = list(bool_none_arg.keys())
+bool_none_arg_values = list(bool_none_arg.values())
+
+int_arg = {"-5": -5, "-1": -1, "0": 0, "1": 1, "5": 5}
 int_arg_keys = list(int_arg.keys())
 int_arg_values = list(int_arg.values())
 

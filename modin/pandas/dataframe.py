@@ -3196,7 +3196,7 @@ class DataFrame(object):
             axis_labels = self.index
             axis_length = len(axis_labels)
         else:
-            axis_labels = self.column
+            axis_labels = self.columns
             axis_length = len(axis_labels)
         if weights is not None:
             # Index of the weights Series should correspond to the index of the
@@ -3291,7 +3291,7 @@ class DataFrame(object):
                 a=axis_labels, size=n, replace=replace, p=weights
             )
         if axis == 1:
-            data_manager = self._data_manager.getitem_col_array(samples)
+            data_manager = self._data_manager.getitem_column_array(samples)
             return DataFrame(data_manager=data_manager)
         else:
             data_manager = self._data_manager.getitem_row_array(samples)
@@ -3360,6 +3360,7 @@ class DataFrame(object):
         Returns:
             If inplace is False, returns a new DataFrame, otherwise None.
         """
+        axis = pandas.DataFrame()._get_axis_number(axis)
         if is_scalar(labels):
             warnings.warn(
                 'set_axis now takes "labels" as first argument, and '
@@ -3381,6 +3382,7 @@ class DataFrame(object):
             inplace = True
         if inplace:
             setattr(self, pandas.DataFrame()._get_axis_name(axis), labels)
+            return None
         else:
             obj = self.copy()
             obj.set_axis(labels, axis=axis, inplace=True)
