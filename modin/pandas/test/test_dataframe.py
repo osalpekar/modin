@@ -2557,15 +2557,13 @@ def test_sample(modin_df, pandas_df, axis):
     with pytest.raises(ValueError):
         modin_df.sample(n=3, frac=0.4, axis=axis)
 
-    print(modin_df.equals(pandas_df))
-    df_equals(
-        modin_df.sample(frac=0.5, random_state=42, axis=axis),
-        pandas_df.sample(frac=0.5, random_state=42, axis=axis),
-    )
-    df_equals(
-        modin_df.sample(n=2, random_state=42, axis=axis),
-        pandas_df.sample(n=2, random_state=42, axis=axis),
-    )
+    modin_result = modin_df.sample(frac=0.5, random_state=42, axis=axis)
+    pandas_result = pandas_df.sample(frac=0.5, random_state=42, axis=axis)
+    df_equals(modin_result, pandas_result)
+
+    modin_result = modin_df.sample(n=2, random_state=42, axis=axis)
+    pandas_result = pandas_df.sample(n=2, random_state=42, axis=axis)
+    df_equals(modin_result, pandas_result)
 
 
 @pytest.mark.skip(reason="Defaulting to Pandas")
@@ -2853,8 +2851,8 @@ def test_style(modin_df, pandas_df):
 @pytest.mark.parametrize(
     "min_count", int_arg_values, ids=arg_keys("min_count", int_arg_keys)
 )
-def test_sum(request, modin_df, pandas_df, axis, skipna, numeric_only, min_count):
-    if not name_contains(request.node.name, numeric_dfs):
+def test_sum(request, modin_df, pandas_df, axis, skipna, numeric_only, min_count=0):
+    if numeric_only or name_contains(request.node.name, numeric_dfs):
         modin_result = modin_df.sum(
             axis=axis, skipna=skipna, numeric_only=numeric_only, min_count=min_count
         )
