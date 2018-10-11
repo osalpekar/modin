@@ -2851,7 +2851,7 @@ def test_style(modin_df, pandas_df):
 @pytest.mark.parametrize(
     "min_count", int_arg_values, ids=arg_keys("min_count", int_arg_keys)
 )
-def test_sum(request, modin_df, pandas_df, axis, skipna, numeric_only, min_count=0):
+def test_sum(request, modin_df, pandas_df, axis, skipna, numeric_only, min_count):
     if numeric_only or name_contains(request.node.name, numeric_dfs):
         modin_result = modin_df.sum(
             axis=axis, skipna=skipna, numeric_only=numeric_only, min_count=min_count
