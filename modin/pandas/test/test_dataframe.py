@@ -2719,6 +2719,21 @@ def test_slice_shift(modin_df, pandas_df):
     "sort_remaining", bool_arg_values, ids=arg_keys("sort_remaining", bool_arg_keys)
 )
 def test_sort_index(modin_df, pandas_df, axis, ascending, na_position, sort_remaining):
+    # Change index value so sorting will actually make a difference
+    if axis == 'rows' or axis == 0:
+        length = len(modin_df.index)
+        modin_df.index = [(i-length/2)%length for i in range(length)]
+        pandas_df.index = [(i-length/2)%length for i in range(length)]
+    # Add NaNs to sorted index
+    if axis == 'rows' or axis == 0:
+        length = len(modin_df.index)
+        modin_df.index = [np.nan if i % 2 == 0 else modin_df.index[i] for i in range(length)]
+        pandas_df.index = [np.nan if i % 2 == 0 else pandas_df.index[i] for i in range(length)]
+    else:
+        length = len(modin_df.columns)
+        modin_df.columns = [np.nan if i % 2 == 0 else modin_df.columns[i] for i in range(length)]
+        pandas_df.columns = [np.nan if i % 2 == 0 else pandas_df.columns[i] for i in range(length)]
+
     modin_result = modin_df.sort_index(
         axis=axis, ascending=ascending, na_position=na_position, inplace=False
     )
@@ -2727,13 +2742,15 @@ def test_sort_index(modin_df, pandas_df, axis, ascending, na_position, sort_rema
     )
     df_equals(modin_result, pandas_result)
 
-    modin_df.sort_index(
+    modin_df_cp = modin_df.copy()
+    pandas_df_cp = pandas_df.copy()
+    modin_df_cp.sort_index(
         axis=axis, ascending=ascending, na_position=na_position, inplace=True
     )
-    pandas_df.sort_index(
+    pandas_df_cp.sort_index(
         axis=axis, ascending=ascending, na_position=na_position, inplace=True
     )
-    df_equals(modin_df, pandas_df)
+    df_equals(modin_df_cp, pandas_df_cp)
 
 
 @pytest.mark.parametrize("modin_df, pandas_df", test_dfs_values, ids=test_dfs_keys)
