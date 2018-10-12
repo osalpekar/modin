@@ -2747,8 +2747,13 @@ def test_sort_values(request, modin_df, pandas_df, axis, ascending, na_position)
         (axis == 0 or axis == "over rows")
         or name_contains(request.node.name, numeric_dfs)
     ):
-        index = modin_df.index if axis or axis == "columns" else modin_df.columns
+        index = modin_df.index if axis == 1 or axis == "columns" else modin_df.columns
         key = index[0]
+        print(key)
+        print(axis)
+        print(index)
+        print(modin_df.columns)
+        print(modin_df.index)
         modin_result = modin_df.sort_values(
             key, axis=axis, ascending=ascending, na_position=na_position, inplace=False
         )
