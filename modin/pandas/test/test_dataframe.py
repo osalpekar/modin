@@ -2121,9 +2121,7 @@ def test_pivot_table(modin_df, pandas_df):
 def test_plot(request, modin_df, pandas_df):
     if name_contains(request.node.name, numeric_dfs):
         # We have to test this way because equality in plots means same object.
-        # zipped_plot_lines = zip(modin_df.plot().lines, to_pandas(modin_df).plot().lines)
         zipped_plot_lines = zip(modin_df.plot().lines, pandas_df.plot().lines)
-
         for l, r in zipped_plot_lines:
             if isinstance(l.get_xdata(), np.ma.core.MaskedArray) and isinstance(r.get_xdata(), np.ma.core.MaskedArray):
                 assert all((l.get_xdata() == r.get_xdata()).data)
