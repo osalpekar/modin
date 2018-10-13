@@ -1868,8 +1868,13 @@ def test_mask(modin_df, pandas_df):
     ids=arg_keys("numeric_only", bool_none_arg_keys),
 )
 def test_max(request, modin_df, pandas_df, axis, skipna, numeric_only):
+    try:
+        pandas_result = pandas_df.max(axis=axis, skipna=skipna, numeric_only=numeric_only)
+    except:
+        with pytest.raises(TypeError):
+            modin_result = modin_df.max(axis=axis, skipna=skipna, numeric_only=numeric_only)
+        return
     modin_result = modin_df.max(axis=axis, skipna=skipna, numeric_only=numeric_only)
-    pandas_result = pandas_df.max(axis=axis, skipna=skipna, numeric_only=numeric_only)
     df_equals(modin_result, pandas_result)
 
 
@@ -2008,8 +2013,13 @@ def test_merge():
     ids=arg_keys("numeric_only", bool_none_arg_keys),
 )
 def test_min(modin_df, pandas_df, axis, skipna, numeric_only):
+    try:
+        pandas_result = pandas_df.min(axis=axis, skipna=skipna, numeric_only=numeric_only)
+    except:
+        with pytest.raises(TypeError):
+            modin_result = modin_df.min(axis=axis, skipna=skipna, numeric_only=numeric_only)
+        return
     modin_result = modin_df.min(axis=axis, skipna=skipna, numeric_only=numeric_only)
-    pandas_result = pandas_df.min(axis=axis, skipna=skipna, numeric_only=numeric_only)
     df_equals(modin_result, pandas_result)
 
 
