@@ -7,19 +7,6 @@ import pandas
 from .dataframe import DataFrame
 
 
-def isna(obj):
-    """
-    Detect missing values for an array-like object.
-    Args:
-        obj: Object to check for null or missing values.
-
-    Returns:
-        bool or array-like of bool
-    """
-    if isinstance(obj, DataFrame):
-        return obj.isna()
-    else:
-        return pandas.isna(obj)
 
 
 def merge(
@@ -107,3 +94,88 @@ def pivot_table(
         dropna=dropna,
         margins_name=margins_name,
     )
+
+def melt(
+    frame,
+    id_vars=None,
+    value_vars=None,
+    var_name=None,
+    value_name="value",
+    col_level=None,
+):
+    return frame.melt(
+        id_vars=None,
+        value_vars=None,
+        var_name=None,
+        value_name="value",
+        col_level=None,
+    )
+
+def wide_to_long(df, stubnames, i, j, sep='', suffix='\\d+'):
+    # move _default_to_pandas_func to some kinda utils.py for dataframes
+    result = pandas.wide_to_long(df._data_manager.to_pandas(),
+            i, j, sep=sep, suffix=suffix)
+    return DataFrame(result)
+
+def isna(obj):
+    """
+    Detect missing values for an array-like object.
+    Args:
+        obj: Object to check for null or missing values.
+
+    Returns:
+        bool or array-like of bool
+    """
+    if isinstance(obj, DataFrame):
+        return obj.isna()
+    else:
+        return pandas.isna(obj)
+
+def isnull(obj):
+    """
+    Detect missing values for an array-like object.
+    Args:
+        obj: Object to check for null or missing values.
+
+    Returns:
+        bool or array-like of bool
+    """
+    if isinstance(obj, DataFrame):
+        return obj.isnull()
+    else:
+        return pandas.isnull(obj)
+
+def notna(obj):
+    """
+    Detect missing values for an array-like object.
+    Args:
+        obj: Object to check for null or missing values.
+
+    Returns:
+        bool or array-like of bool
+    """
+    if isinstance(obj, DataFrame):
+        return obj.notna()
+    else:
+        return pandas.notna(obj)
+
+def notnull(obj):
+    """
+    Detect missing values for an array-like object.
+    Args:
+        obj: Object to check for null or missing values.
+
+    Returns:
+        bool or array-like of bool
+    """
+    if isinstance(obj, DataFrame):
+        return obj.notnull()
+    else:
+        return pandas.notnull(obj)
+
+#not sure about this one
+# def pivot
+# def merge_ordered
+# def merge_asof
+
+
